@@ -1,0 +1,132 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Tokenami",
+  "projectDescription": "A type-safe, utility-first CSS library using atomic CSS variables with no runtime injection or bundler requirements.",
+  "theme": "willow",
+  "primaryColor": "#242b2c",
+  "lightColor": "#040404",
+  "darkColor": "#6a6a6d",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "installation", "quickstart"]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/theming",
+              "concepts/grid-values",
+              "concepts/selectors",
+              "concepts/arbitrary-values"
+            ]
+          },
+          {
+            "group": "Styling",
+            "pages": [
+              "styling/css-utility",
+              "styling/css-compose",
+              "styling/variants",
+              "styling/extending-styles"
+            ]
+          },
+          {
+            "group": "Design Systems",
+            "pages": [
+              "design-systems/official-system",
+              "design-systems/building-your-own",
+              "design-systems/global-styles",
+              "design-systems/breakpoints",
+              "design-systems/animation"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/custom-selectors",
+              "advanced/property-aliases",
+              "advanced/theming-properties",
+              "advanced/custom-properties"
+            ]
+          },
+          {
+            "group": "TypeScript",
+            "pages": [
+              "typescript/utility-types",
+              "typescript/ci-setup"
+            ]
+          },
+          {
+            "group": "Troubleshooting",
+            "pages": [
+              "troubleshooting/editor-setup",
+              "troubleshooting/browser-support",
+              "troubleshooting/library-support"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "CSS Utilities",
+            "pages": [
+              "api/css",
+              "api/css-compose",
+              "api/create-css"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api/create-config",
+              "api/config-options"
+            ]
+          },
+          {
+            "group": "Types",
+            "pages": [
+              "api/types/tokenami-style",
+              "api/types/variants",
+              "api/types/token-value"
+            ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "api/cli/commands",
+              "api/cli/init",
+              "api/cli/check"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Atomic CSS variables instead of utility classes",
+    "Type-safe design tokens with autocomplete",
+    "Zero runtime injection, no bundler required",
+    "Composable variants and style extensions",
+    "Custom selectors and property aliases",
+    "Grid-based spacing system",
+    "Multiple theme support with dark mode",
+    "TypeScript plugin for enhanced DX"
+  ],
+  "publicApiSurface": [
+    "css()",
+    "css.compose()",
+    "createCss()",
+    "createConfig()",
+    "TokenamiStyle",
+    "Variants",
+    "TokenValue",
+    "tokenami init",
+    "tokenami check",
+    "tokenami --output --watch"
+  ]
+}
