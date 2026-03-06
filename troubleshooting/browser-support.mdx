@@ -1,0 +1,37 @@
+---
+title: Browser Support
+description: Browser compatibility requirements for Tokenami
+---
+
+## Cascade Layers Requirement
+
+Tokenami relies on [CSS cascade layers](https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Cascade_layers), so it works in browsers that support the `@layer` rule. This is a fundamental requirement for Tokenami to function properly.
+
+## Supported Browsers
+
+The following browsers support Tokenami:
+
+| Browser | Minimum Version |
+| ------- | --------------- |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/ae970301-390d-426e-9ea7-974267917df6" alt="Chrome" width="24px" height="24px" /> Chrome | 99+ |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/8588dacd-a77f-44ee-9111-cea6601ebc35" alt="Edge" width="24px" height="24px" /> Edge | 99+ |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/b2b38574-5290-44ba-bb28-87e139f8efb8" alt="Firefox" width="24px" height="24px" /> Firefox | 97+ |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/16c7374c-a466-4fbe-9459-44c3b30bb688" alt="Safari" width="24px" height="24px" /> Safari | 15.4+ |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/16c7374c-a466-4fbe-9459-44c3b30bb688" alt="iOS Safari" width="24px" height="24px" /> iOS Safari | 15.4+ |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/e9eaad5e-ef39-4423-ad4b-2e61c0bcc873" alt="Opera" width="24px" height="24px" /> Opera | 86+ |
+
+## Browserslist Configuration
+
+You can use [browserslist](https://browsersl.ist/) to add autoprefixing to your CSS properties in the generated CSS file. However, Tokenami currently doesn't support vendor-prefixed **values**, which is being tracked in [this issue](https://github.com/tokenami/tokenami/issues/103).
+
+<Warning>
+Tokenami does not support browsers below the listed supported browser versions. We recommend using `"browserslist": ["supports css-cascade-layers"]` if you're unsure about your target browsers.
+</Warning>
+
+## Checking Browser Support
+
+You can check cascade layer support for specific browsers on [Can I Use](https://caniuse.com/css-cascade-layers).
+
+## Need Help?
+
+If you have questions about browser compatibility, join our [Discord server](https://discord.gg/CAU4HNR4XK) for support.

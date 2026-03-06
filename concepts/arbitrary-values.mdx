@@ -1,0 +1,284 @@
+---
+title: Arbitrary Values
+description: Learn how to use the triple-dash fallback syntax for one-off values outside your theme
+---
+
+While Tokenami encourages using theme tokens for consistency, sometimes you need one-off values that aren't in your design system. The triple-dash fallback syntax allows you to use arbitrary values while maintaining type safety.
+
+## The Triple-Dash Syntax
+
+Use `var(---, value)` to specify arbitrary values that bypass theme constraints:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--padding': 'var(---, 20px)',
+  '--background-color': 'var(---, #ff6b6b)',
+  '--border-radius': 'var(---, 12px)',
+})} />
+```
+
+## How It Works
+
+The triple-dash (`---`) is a special CSS custom property fallback that Tokenami recognizes. It tells TypeScript "this is intentionally outside the theme" while still producing valid CSS:
+
+```css
+/* Generated CSS */
+.element {
+  --padding: var(---, 20px);  /* Falls back to 20px */
+  padding: var(--padding);
+}
+```
+
+<Warning>
+Tokenami intentionally adds friction to using arbitrary values. This encourages you to stick to your theme guidelines and helps you quickly identify values that don't conform to your design system.
+</Warning>
+
+## When to Use Arbitrary Values
+
+Arbitrary values are useful in specific scenarios:
+
+### Prototyping
+
+When exploring design ideas before committing them to your theme:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Prototype() {
+  return (
+    <div style={css({
+      '--padding': 'var(---, 18px)',
+      '--background': 'var(---, linear-gradient(45deg, #f06, #4a90e2))',
+    })}>
+      Experimental design
+    </div>
+  );
+}
+```
+
+### One-off Adjustments
+
+For truly unique values that don't belong in the theme:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--margin-top': 'var(---, -2px)',  // Optical alignment
+  '--letter-spacing': 'var(---, 0.02em)',  // Fine-tuning
+})} />
+```
+
+### Third-party Integration
+
+When integrating with external libraries that require specific values:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--width': 'var(---, 250px)',  // Required by library
+  '--z-index': 'var(---, 9999)',  // Overlay positioning
+})} />
+```
+
+## Supported Value Types
+
+The triple-dash syntax works with any valid CSS value:
+
+<CodeGroup>
+```tsx Lengths
+<div style={css({
+  '--width': 'var(---, 250px)',
+  '--height': 'var(---, 10rem)',
+  '--margin': 'var(---, 2em)',
+})} />
+```
+
+```tsx Colors
+<div style={css({
+  '--color': 'var(---, #ff6b6b)',
+  '--background': 'var(---, rgb(255, 107, 107))',
+  '--border-color': 'var(---, rgba(0, 0, 0, 0.1))',
+})} />
+```
+
+```tsx Keywords
+<div style={css({
+  '--display': 'var(---, grid)',
+  '--position': 'var(---, sticky)',
+  '--overflow': 'var(---, hidden)',
+})} />
+```
+
+```tsx Complex values
+<div style={css({
+  '--background': 'var(---, linear-gradient(to right, red, blue))',
+  '--box-shadow': 'var(---, 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06))',
+  '--transform': 'var(---, translateX(-50%) translateY(-50%) rotate(45deg))',
+})} />
+```
+</CodeGroup>
+
+## Alternatives to Arbitrary Values
+
+Before using arbitrary values, consider these alternatives:
+
+### Add to Theme
+
+If you're using the value more than once, add it to your theme:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      // Add your color to the theme
+      brand: '#ff6b6b',
+    },
+    spacing: {
+      // Add custom spacing
+      comfortable: '18px',
+    },
+  },
+});
+```
+
+### Use Grid Values
+
+For spacing, use the grid system instead of arbitrary pixel values:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// Instead of arbitrary value
+<div style={css({ '--padding': 'var(---, 20px)' })} />
+
+// Use grid value (5 * 4px = 20px with default grid)
+<div style={css({ '--padding': 5 })} />
+```
+
+### Create Custom Properties
+
+For reusable patterns, define custom properties in your config:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    gradient: {
+      sunset: 'linear-gradient(to right, #f06, #4a90e2)',
+    },
+  },
+  properties: {
+    'background-image': ['gradient'],
+  },
+});
+```
+
+## Combining with Theme Values
+
+You can mix arbitrary values with theme tokens in the same component:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  // Theme values (recommended)
+  '--color': 'var(--color_primary)',
+  '--border-radius': 'var(--radii_rounded)',
+  '--padding': 4,  // Grid value
+  
+  // Arbitrary values (when necessary)
+  '--margin-top': 'var(---, -2px)',  // Optical adjustment
+  '--box-shadow': 'var(---, 0 2px 8px rgba(0, 0, 0, 0.05))',  // Custom shadow
+})} />
+```
+
+## TypeScript Benefits
+
+The triple-dash syntax prevents TypeScript errors while still signaling intent:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// ❌ TypeScript error: value not in theme
+<div style={css({ '--padding': '20px' })} />
+
+// ✅ No error: explicitly using arbitrary value
+<div style={css({ '--padding': 'var(---, 20px)' })} />
+
+// ✅ No error: using theme token
+<div style={css({ '--padding': 'var(--spacing_comfortable)' })} />
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use sparingly" icon="circle-exclamation">
+    Arbitrary values should be the exception, not the rule. They bypass your design system's constraints.
+  </Card>
+  
+  <Card title="Document reasoning" icon="message">
+    Add comments explaining why an arbitrary value is needed. This helps future maintainers.
+  </Card>
+  
+  <Card title="Consider refactoring" icon="arrow-rotate-right">
+    If you use the same arbitrary value multiple times, add it to your theme instead.
+  </Card>
+  
+  <Card title="Prefer theme tokens" icon="palette">
+    Always check if a theme token can solve your problem before using arbitrary values.
+  </Card>
+</CardGroup>
+
+<Note>
+The friction of the triple-dash syntax is intentional. It makes arbitrary values visible in your codebase, making it easy to audit and clean up one-off values later.
+</Note>
+
+## Example: Refactoring Arbitrary Values
+
+Here's how to evolve from arbitrary values to a proper theme:
+
+<Steps>
+  <Step title="Start with arbitrary values">
+    ```tsx
+    <div style={css({
+      '--padding': 'var(---, 18px)',
+      '--background': 'var(---, #ff6b6b)',
+    })} />
+    ```
+  </Step>
+  
+  <Step title="Notice repeated usage">
+    ```tsx
+    // Used in multiple components
+    '--background': 'var(---, #ff6b6b)'
+    ```
+  </Step>
+  
+  <Step title="Add to theme">
+    ```ts
+    export default createConfig({
+      theme: {
+        color: {
+          accent: '#ff6b6b',
+        },
+      },
+    });
+    ```
+  </Step>
+  
+  <Step title="Replace arbitrary values">
+    ```tsx
+    <div style={css({
+      '--padding': 5,  // Use grid
+      '--background': 'var(--color_accent)',  // Use theme
+    })} />
+    ```
+  </Step>
+</Steps>

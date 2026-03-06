@@ -1,0 +1,57 @@
+---
+title: Library Support
+description: Supported JavaScript frameworks and libraries for Tokenami
+---
+
+## Supported Frameworks
+
+Tokenami currently works with the following JavaScript frameworks and libraries:
+
+| Framework | Support Status |
+| --------- | -------------- |
+| <img src="https://github.com/tokenami/tokenami/assets/175330/8cdfcdf8-05da-4096-8e0b-5645e1b329e5" alt="React" width="24" /> React | ✅ Supported |
+| <img src="https://github.com/preactjs.png" alt="Preact" width="24" /> Preact | ✅ Supported |
+| <img src="https://github.com/vuejs.png" alt="Vue" width="24" /> Vue | ✅ Supported |
+| <img src="https://github.com/solidjs.png" alt="SolidJS" width="24" /> SolidJS | ✅ Supported |
+| <img src="https://github.com/qwikdev.png" alt="Qwik" width="24" /> Qwik | ✅ Supported |
+
+## Framework-Agnostic Design
+
+Tokenami is designed to work with any framework that supports inline styles via the `style` attribute. The library generates static CSS and applies styles directly to elements, making it compatible with most modern JavaScript frameworks.
+
+## Usage Example
+
+Tokenami's syntax is consistent across all supported frameworks:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Button() {
+  return (
+    <button style={css({ 
+      '--padding': 4, 
+      '--background': 'var(--color_primary)' 
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+## Future Support
+
+We're still in early development and plan to support more frameworks in the future. If you'd like to see support for a specific framework, please:
+
+1. Check our [existing issues](https://github.com/tokenami/tokenami/issues) to see if it's already requested
+2. Open a new issue on [GitHub](https://github.com/tokenami/tokenami/issues/new) to request support
+3. Join our [Discord server](https://discord.gg/CAU4HNR4XK) to discuss with the community
+
+## Design Systems
+
+Projects that consume a Tokenami design system do **not need to be using Tokenami themselves**. If they're not using Tokenami, they can reference their stylesheet after the design system stylesheet and their styles will override accordingly.
+
+This makes Tokenami design systems portable and framework-agnostic.
+
+## Need Help?
+
+If you encounter issues with a specific framework, join our [Discord server](https://discord.gg/CAU4HNR4XK) for assistance.

@@ -1,97 +1,104 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Tokenami"
+description: "Type-safe CSS-in-JS with atomic CSS variables—no runtime, no bundler required"
 ---
 
-## Setting up
+<Info>
+  Tokenami is in active development. Check our [GitHub issues](https://github.com/tokenami/tokenami/issues) before reporting bugs.
+</Info>
 
-Get your documentation site up and running in minutes.
+## What is Tokenami?
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Tokenami is a modern CSS-in-JS library that replaces atomic utility classes with **atomic CSS variables**. It provides type-safe design tokens with autocomplete, zero runtime injection, and no bundler requirements—giving you the best of both CSS-in-JS and utility-first frameworks.
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Simple Naming" icon="tag">
+    Turn any CSS property into a variable: `padding` → `--padding`
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Smaller Stylesheets" icon="minimize">
+    One variable-driven rule instead of dozens of utility classes
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Type Safety" icon="shield-check">
+    Autocomplete and type checking built into your workflow
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Zero Runtime" icon="bolt">
+    Static styles with no bundler integration required
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Quick Example
 
-Everything you need to create world-class documentation.
+```tsx
+import { css } from '@tokenami/css';
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+function Button() {
+  return (
+    <button style={css({
+      '--padding': 4,
+      '--background': 'var(--color_primary)',
+      '--hover_background': 'var(--color_primary-dark)',
+    })}>
+      Click me
+    </button>
+  );
+}
+```
 
-## Need inspiration?
+## Why Tokenami?
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<AccordionGroup>
+  <Accordion title="No Runtime Injection">
+    Following React team's recommendation to use static CSS files and inline styles for dynamic values. Tokenami generates CSS at build time with no runtime overhead.
+  </Accordion>
+  
+  <Accordion title="No Class Soup">
+    Your components have one class name for reusable styles, keeping HTML clean and DRY—unlike utility-first frameworks that repeat classes across components.
+  </Accordion>
+  
+  <Accordion title="Type-Safe Tokens">
+    Your theme defines and enforces design tokens with full TypeScript support and autocomplete—removing unused tokens shows errors in your IDE.
+  </Accordion>
+  
+  <Accordion title="Portable & Extensible">
+    Atomic CSS variables give consumers control to override styles. No specificity wars, no locked-in architecture.
+  </Accordion>
+</AccordionGroup>
+
+## Key Features
+
+- **Atomic CSS Variables** — Replace utility classes with CSS variables
+- **Type-Safe Design Tokens** — Autocomplete and type checking for your theme
+- **Zero Bundler Setup** — Simple CLI generates static styles
+- **Composable Variants** — Build reusable component styles with variant support
+- **Custom Selectors** — Define expressive selectors for hover, focus, and more
+- **Grid-Based Spacing** — Consistent spacing system with grid values
+- **Multiple Themes** — Built-in support for dark mode and theme switching
+- **Framework Agnostic** — Works with React, Vue, Solid, Qwik, and more
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Tokenami and set up your project
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Build your first component in minutes
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/concepts/theming">
+    Learn how theming and tokens work
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/css">
+    Explore the complete API
+  </Card>
+</CardGroup>
+
+## Community
+
+<CardGroup cols={2}>
+  <Card title="GitHub" icon="github" href="https://github.com/tokenami/tokenami">
+    Star us on GitHub and contribute
+  </Card>
+  <Card title="Discord" icon="discord" href="https://discord.gg/CAU4HNR4XK">
+    Join our community for help and discussions
+  </Card>
+</CardGroup>

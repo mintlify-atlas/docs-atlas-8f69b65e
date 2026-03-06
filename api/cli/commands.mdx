@@ -1,0 +1,330 @@
+---
+title: CLI Commands
+description: Reference for all Tokenami CLI commands
+---
+
+The Tokenami CLI provides commands to initialize your project, generate stylesheets, and validate token usage.
+
+## Installation
+
+The CLI is included with the `tokenami` package:
+
+```bash
+npm install tokenami
+# or
+pnpm add tokenami
+# or
+yarn add tokenami
+```
+
+## Available Commands
+
+The CLI provides three main commands:
+
+- [`init`](/api/cli/init) - Initialize Tokenami in your project
+- [`check`](/api/cli/check) - Validate token usage and type safety
+- Default command - Generate CSS stylesheet from token usage
+
+## Default Command (Generate)
+
+Generate a CSS stylesheet from your token usage.
+
+### Usage
+
+```bash
+tokenami [files] [options]
+```
+
+### Arguments
+
+<ParamField path="files" type="string">
+  Glob pattern for files to include. Overrides `include` from config.
+</ParamField>
+
+### Options
+
+<ParamField path="-c, --config" type="string">
+  Path to a custom config file.
+  
+  **Default:** `./tokenami.config.{ts,js}`
+</ParamField>
+
+<ParamField path="-o, --output" type="string">
+  Output path for the generated CSS file.
+  
+  **Default:** `public/tokenami.css`
+</ParamField>
+
+<ParamField path="-w, --watch" type="boolean">
+  Watch for file changes and rebuild automatically.
+</ParamField>
+
+<ParamField path="--minify" type="boolean">
+  Minify the generated CSS output.
+</ParamField>
+
+### Examples
+
+#### Basic Generation
+
+Generate CSS using config file settings:
+
+```bash
+tokenami
+```
+
+#### With Custom Config
+
+Use a custom config file:
+
+```bash
+tokenami --config ./config/tokens.ts
+```
+
+#### Custom Output Path
+
+Generate CSS to a specific location:
+
+```bash
+tokenami --output ./dist/styles.css
+```
+
+#### Watch Mode
+
+Continuously watch for changes and regenerate:
+
+```bash
+tokenami --watch
+```
+
+#### Minified Production Build
+
+Generate minified CSS for production:
+
+```bash
+tokenami --minify --output ./dist/tokenami.min.css
+```
+
+#### Override Include Pattern
+
+Scan specific files instead of using config:
+
+```bash
+tokenami "./src/**/*.tsx" --output ./public/tokenami.css
+```
+
+#### Watch with Custom Config and Minify
+
+Combine multiple options:
+
+```bash
+tokenami \
+  --config ./config/tokens.ts \
+  --output ./dist/styles.css \
+  --minify \
+  --watch
+```
+
+## How It Works
+
+The CLI:
+
+1. **Loads Configuration**: Reads your `tokenami.config.{ts,js}` file
+2. **Scans Files**: Uses `include` patterns to find all files using tokens
+3. **Extracts Tokens**: Parses token properties and values from your code
+4. **Generates CSS**: Creates a CSS file with:
+   - CSS custom properties for your theme
+   - Responsive variants
+   - Selector variants
+   - Global styles
+   - Keyframe animations
+   - Component styles from `css.compose()`
+5. **Optimizes Output**: Processes with Lightning CSS for browser compatibility
+6. **Writes File**: Outputs the final CSS to the specified path
+
+## Generated CSS Structure
+
+The generated CSS follows this structure:
+
+```css
+/* CSS Layers */
+@layer tokenami.reset, tokenami.tokens, tokenami.components, tokenami.utilities;
+
+/* Theme tokens */
+@layer tokenami.tokens {
+  :root {
+    --color_primary: #007bff;
+    --space_4: 1rem;
+    /* ... */
+  }
+  
+  /* Theme modes */
+  [data-theme="dark"] {
+    --color_primary: #66b3ff;
+    /* ... */
+  }
+}
+
+/* Global styles */
+@layer tokenami.reset {
+  * {
+    box-sizing: border-box;
+  }
+  /* ... */
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Component styles from css.compose() */
+@layer tokenami.components {
+  .tk-abc123 {
+    --padding: var(--space_3);
+    padding: var(--padding);
+  }
+}
+
+/* Responsive variants */
+@media (min-width: 768px) {
+  .tk-abc123 {
+    --md_padding: var(--space_4);
+    padding: var(--md_padding);
+  }
+}
+
+/* Selector variants */
+.tk-abc123:hover {
+  --hover_background-color: var(--color_primary-dark);
+  background-color: var(--hover_background-color);
+}
+```
+
+## Including the CSS
+
+After generation, include the CSS in your application:
+
+### HTML
+
+```html
+<link rel="stylesheet" href="/tokenami.css" />
+```
+
+### Next.js
+
+```tsx title="app/layout.tsx"
+import './tokenami.css';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### Vite
+
+```tsx title="src/main.tsx"
+import './tokenami.css';
+```
+
+### Remix
+
+```tsx title="app/root.tsx"
+import styles from './tokenami.css';
+
+export const links = () => [
+  { rel: 'stylesheet', href: styles }
+];
+```
+
+## CI/CD Integration
+
+Integrate into your build pipeline:
+
+### package.json Scripts
+
+```json
+{
+  "scripts": {
+    "dev": "tokenami --watch & next dev",
+    "build": "tokenami --minify && next build",
+    "tokenami:generate": "tokenami",
+    "tokenami:watch": "tokenami --watch"
+  }
+}
+```
+
+### Pre-commit Hook
+
+```json title="package.json"
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "tokenami --minify"
+    }
+  }
+}
+```
+
+## Environment Variables
+
+The CLI respects these environment variables:
+
+- `NODE_ENV` - Affects browserslist target selection
+- `BROWSERSLIST_ENV` - Override browserslist environment
+
+```bash
+NODE_ENV=production tokenami --minify
+```
+
+## Performance
+
+The CLI is optimized for large codebases:
+
+- **Fast scanning**: Uses `fast-glob` for file discovery
+- **Parallel processing**: Processes files concurrently
+- **Smart caching**: Only rebuilds when files change in watch mode
+- **Lightning CSS**: Uses Rust-based CSS processing for speed
+
+Typical performance:
+- Small project (under 100 files): ~1s
+- Medium project (100-500 files): 1-3s
+- Large project (500+ files): 3-10s
+
+## Troubleshooting
+
+### Config Not Found
+
+```bash
+# Ensure config file exists
+ls tokenami.config.ts
+
+# Or specify path explicitly
+tokenami --config ./config/tokenami.config.ts
+```
+
+### No Tokens Found
+
+```bash
+# Check include patterns in config
+# Ensure files match the pattern
+tokenami "./src/**/*.tsx" --output ./test.css
+```
+
+### TypeScript Config Errors
+
+```bash
+# Ensure your tsconfig.json is valid
+npx tsc --noEmit
+```
+
+## Related
+
+- [`tokenami init`](/api/cli/init) - Initialize Tokenami
+- [`tokenami check`](/api/cli/check) - Validate token usage
+- [Config Options](/api/config-options) - Configuration reference

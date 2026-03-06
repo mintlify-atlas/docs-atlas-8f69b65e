@@ -1,0 +1,198 @@
+---
+title: Introduction
+description: Learn what Tokenami is and why it's the modern solution for building type-safe, portable design systems
+---
+
+# Introduction to Tokenami
+
+Tokenami is a modern CSS-in-JS toolkit that reinvents how you build design systems. It replaces atomic CSS classes with **atomic CSS variables**, giving you the type safety and developer experience of CSS-in-JS with the performance and simplicity of static CSS.
+
+<Note>
+  Tokenami is still in early development. You might find bugs or missing features. Before reporting issues, please check the [existing issues](https://github.com/tokenami/tokenami/issues) first.
+</Note>
+
+## What is Tokenami?
+
+Tokenami isn't another design system—it's a toolkit for building your own. By providing atomic CSS variables and a unified set of tools, Tokenami makes it simple to create portable, type-safe design systems with tokens at the heart of your CSS.
+
+Instead of writing utility classes like `p-4 bg-blue-500 hover:bg-blue-600`, you write:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Button() {
+  return (
+    <button style={css({ 
+      '--padding': 4, 
+      '--background-color': 'var(--color_blue)',
+      '--hover_background-color': 'var(--color_blue-dark)'
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+This approach applies styles directly to the `style` attribute using CSS variables, keeping specificity low and making your components easy to override.
+
+## Why Use Tokenami?
+
+The React team [no longer recommends](https://github.com/reactwg/react-18/discussions/110) CSS-in-JS solutions that inject styles at runtime. Instead, they suggest using static stylesheets with inline styles for dynamic values.
+
+Tokenami bridges the gap between traditional CSS-in-JS and utility-first frameworks, giving you:
+
+<CardGroup cols={2}>
+  <Card title="Type Safety" icon="shield-check">
+    Full TypeScript integration with autocomplete for your design tokens
+  </Card>
+  <Card title="No Runtime" icon="bolt">
+    Static CSS generation with no JavaScript runtime overhead
+  </Card>
+  <Card title="No Bundler" icon="box">
+    Simple CLI tool—no complex bundler integration required
+  </Card>
+  <Card title="Portable" icon="share">
+    Build design systems that work anywhere, with or without Tokenami
+  </Card>
+</CardGroup>
+
+## Key Benefits
+
+### Simple Naming Convention
+
+Turn any CSS property into a variable by adding `--`. No need to memorize utility class names.
+
+```tsx
+// Before: Tailwind
+<div className="mt-0 mb-5" />
+
+// After: Tokenami
+<div style={css({ '--margin-top': 0, '--margin-bottom': 5 })} />
+```
+
+### Smaller Stylesheets
+
+One variable-driven rule instead of dozens of utility classes. The `@tokenami/css` package is only [~2.5kb gzipped](https://bundlephobia.com/package/@tokenami/css).
+
+### Clean Markup
+
+Use `css.compose()` to extract styles into classes, keeping your markup DRY:
+
+```tsx
+const button = css.compose({
+  '--background': 'var(--color_primary)',
+  '--hover_background': 'var(--color_primary-dark)',
+});
+
+function Button(props) {
+  const [cn, css] = button();
+  return <button className={cn(props.className)} style={css(props.style)} />;
+}
+```
+
+Output:
+```html
+<button class="tk-abc">Click me</button>
+```
+
+### Single Source of Truth
+
+Your `tokenami.config.ts` file defines and enforces your design tokens:
+
+```ts
+export default createConfig({
+  theme: {
+    color: {
+      'slate-100': '#f1f5f9',
+      'slate-700': '#334155',
+      'sky-500': '#0ea5e9',
+    },
+  },
+});
+```
+
+### Dynamic by Default
+
+Pass props directly into tokens without workarounds:
+
+```tsx
+function Box({ color }) {
+  return <div style={css({ '--color': color })} />;
+}
+```
+
+### Expressive Selectors
+
+Add responsive breakpoints and pseudo-states with underscores:
+
+```tsx
+<div style={css({
+  '--padding': 2,              // Base
+  '--md_padding': 4,            // Medium screens
+  '--hover_padding': 6,         // On hover
+  '--md_hover_padding': 8,      // Medium + hover
+})} />
+```
+
+### No Specificity Wars
+
+The `css()` utility handles composition safely—the last style always wins:
+
+```tsx
+function Button(props) {
+  return (
+    <button style={css(
+      { '--padding': 4 },    // Base
+      props.style            // Props override
+    )} />
+  );
+}
+```
+
+## Framework Support
+
+Tokenami works with any framework that supports the `style` attribute:
+
+<CardGroup cols={5}>
+  <Card>
+    <img src="https://github.com/tokenami/tokenami/assets/175330/8cdfcdf8-05da-4096-8e0b-5645e1b329e5" alt="React" width="40" />
+    React
+  </Card>
+  <Card>
+    <img src="https://github.com/preactjs.png" alt="Preact" width="40" />
+    Preact
+  </Card>
+  <Card>
+    <img src="https://github.com/vuejs.png" alt="Vue" width="40" />
+    Vue
+  </Card>
+  <Card>
+    <img src="https://github.com/solidjs.png" alt="SolidJS" width="40" />
+    SolidJS
+  </Card>
+  <Card>
+    <img src="https://github.com/qwikdev.png" alt="Qwik" width="40" />
+    Qwik
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Tokenami uses CSS variables to express everything, including media queries and pseudo-selectors. This approach:
+
+1. **Keeps specificity low** so styles are easy to override
+2. **Enables responsive styling** without runtime CSS injection
+3. **Works with inline styles** since variables can be set on the `style` attribute
+4. **Makes design systems portable** since consumers can override variables
+
+<Info>
+  Don't worry about typing all those dashes—just type `bord`, and Tokenami's IntelliSense will complete `--border-color` for you.
+</Info>
+
+## What's Next?
+
+Ready to get started? Follow our installation guide to set up Tokenami in your project.
+
+<Card title="Installation" icon="download" href="/installation">
+  Install Tokenami and configure your project
+</Card>

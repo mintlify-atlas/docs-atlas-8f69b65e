@@ -1,0 +1,135 @@
+---
+title: css
+description: Apply and merge Tokenami styles at runtime
+---
+
+The `css` function is the core utility for applying Tokenami styles. It merges token properties and handles style overrides with proper specificity.
+
+## Import
+
+```typescript
+import { css } from '@tokenami/css';
+```
+
+## Signature
+
+```typescript
+function css(
+  ...styles: [TokenamiProperties, ...TokenamiOverride[]]
+): TokenamiCSS
+```
+
+<ParamField path="styles" type="TokenamiProperties | TokenamiCSS | false | undefined" required>
+  One or more style objects to merge. Later styles override earlier ones. Supports `false` and `undefined` for conditional styles.
+</ParamField>
+
+<ResponseField name="TokenamiCSS" type="object">
+  A serializable style object that can be passed to the `style` prop of any element.
+</ResponseField>
+
+## Usage
+
+### Basic Usage
+
+Apply token properties directly:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Button() {
+  return (
+    <button style={css({ 
+      '--padding': 'var(--space_4)',
+      '--background-color': 'var(--color_primary)'
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Merging Styles
+
+Merge multiple style objects with proper override behavior:
+
+```tsx
+const baseStyles = {
+  '--padding': 'var(--space_4)',
+  '--border-radius': 'var(--radius_md)'
+};
+
+const activeStyles = {
+  '--background-color': 'var(--color_primary)'
+};
+
+function Button({ active }) {
+  return (
+    <button style={css(
+      baseStyles,
+      active && activeStyles
+    )}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Grid Values
+
+When you pass numeric values, they're automatically converted to use your grid system:
+
+```tsx
+const styles = css({
+  '--padding': 4,      // Uses grid: calc(var(--grid) * 4)
+  '--margin-left': 2   // Uses grid: calc(var(--grid) * 2)
+});
+```
+
+### Shorthand Properties
+
+Shorthand properties automatically override their longhand equivalents:
+
+```tsx
+const styles = css(
+  {
+    '--padding-left': 2,
+    '--padding-right': 2
+  },
+  {
+    '--padding': 4  // Overrides both padding-left and padding-right
+  }
+);
+```
+
+### Conditional Styles
+
+Use `false` or `undefined` to conditionally apply styles:
+
+```tsx
+function Button({ variant, disabled }) {
+  return (
+    <button style={css(
+      baseStyles,
+      variant === 'primary' && primaryStyles,
+      variant === 'secondary' && secondaryStyles,
+      disabled && disabledStyles
+    )}>
+      Click me
+    </button>
+  );
+}
+```
+
+## Features
+
+- **Style Merging**: Later styles override earlier ones
+- **Shorthand Handling**: Shorthands properly override longhands
+- **Grid Integration**: Numeric values use your grid system
+- **Type Safety**: Full TypeScript support for your theme tokens
+- **Performance**: Results are cached for optimal performance
+- **Serializable**: Output can be serialized (e.g., for SSR)
+
+## Related
+
+- [css.compose](/api/css-compose) - Create reusable component styles with variants
+- [createCss](/api/create-css) - Create a custom css function with configuration

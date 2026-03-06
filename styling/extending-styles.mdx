@@ -1,0 +1,324 @@
+---
+title: Extending Styles  
+description: Compose and extend styles from multiple sources using the includes feature
+---
+
+The `includes` feature in `css.compose` allows you to extend styles from multiple composed styles or `css` utilities. This is perfect for building composable design systems where components share common styling patterns.
+
+## Basic Usage
+
+Use the `includes` array to combine styles from multiple sources:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// Reusable focus styles
+const focusable = css({
+  '--focus_outline': 'var(--outline_sm)',
+  '--outline-offset': 'var(--outline-offset_sm)',
+});
+
+// Base button styles
+const button = css.compose({
+  '--background': 'var(--color_primary)',
+  '--color': 'var(--color_white)',
+  '--padding': 4,
+});
+
+// New button that includes both
+const tomatoButton = css.compose({
+  includes: [button, focusable],
+  '--background': 'var(--color_tomato)',
+});
+```
+
+## How It Works
+
+### Non-Conflicting Styles
+
+When there are no conflicts, included styles are merged together:
+
+```tsx
+const rounded = css.compose({
+  '--border-radius': 'var(--radii_rounded)',
+});
+
+const shadowed = css.compose({
+  '--box-shadow': 'var(--shadow_md)',
+});
+
+const card = css.compose({
+  includes: [rounded, shadowed],
+  '--padding': 4,
+});
+
+// Result: All styles are in the CSS file
+// .tk-xyz { --border-radius: ...; --box-shadow: ...; --padding: ...; }
+```
+
+### Conflicting Styles
+
+When the same property is defined in multiple places, later styles override earlier ones and are moved **inline**:
+
+```tsx
+const button = css.compose({
+  '--background': 'var(--color_primary)',
+  '--color': 'var(--color_white)',
+});
+
+const tomatoButton = css.compose({
+  includes: [button],
+  '--background': 'var(--color_tomato)', // Overrides button's background
+});
+```
+
+Generated output:
+
+```html
+<button 
+  class="tk-abc" 
+  style="--background: var(--color_tomato);"
+>
+  Click me
+</button>
+```
+
+The `--background` property is moved inline because it conflicts with the included button style. This ensures the override takes effect without specificity issues.
+
+## Including CSS Utilities
+
+You can include styles created with the regular `css` utility. These styles will always appear inline:
+
+```tsx
+// CSS utility (not composed)
+const focusable = css({
+  '--focus_outline': 'var(--outline_sm)',
+  '--outline-offset': 'var(--outline-offset_sm)',
+});
+
+// Composed style including css utility
+const button = css.compose({
+  includes: [focusable],
+  '--background': 'var(--color_primary)',
+  '--padding': 4,
+});
+
+function Button() {
+  const [cn, css] = button();
+  return <button className={cn()} style={css()} />;
+}
+```
+
+Generated output:
+
+```html
+<button 
+  class="tk-abc"
+  style="--focus_outline: var(--outline_sm); --outline-offset: var(--outline-offset_sm);"
+>
+  Click me
+</button>
+```
+
+Styles from `css` utilities are always inline because they don't generate class names.
+
+## Including Composed Styles
+
+When including other composed styles, you can pass them directly or with variant selections:
+
+### Without Variants
+
+```tsx
+const baseButton = css.compose({
+  '--padding': 4,
+  '--border-radius': 'var(--radii_md)',
+});
+
+const primaryButton = css.compose({
+  includes: [baseButton],
+  '--background': 'var(--color_primary)',
+});
+```
+
+### With Variants
+
+If the included style has variants, call it with your desired variant selection:
+
+```tsx
+const button = css.compose({
+  '--padding': 4,
+  variants: {
+    size: {
+      small: { '--padding': 2 },
+      large: { '--padding': 6 },
+    },
+  },
+});
+
+const iconButton = css.compose({
+  // Include button with large size variant
+  includes: [button({ size: 'large' })],
+  '--display': 'inline-flex',
+  '--align-items': 'center',
+});
+
+function IconButton() {
+  const [cn, css] = iconButton();
+  // The 'large' size from button is automatically applied
+  return <button className={cn()} style={css()} />;
+}
+```
+
+When you call an included composed style with variants, those variant selections are baked into the include.
+
+## Multiple Includes
+
+You can include as many styles as you need:
+
+```tsx
+const focusable = css({
+  '--focus_outline': 'var(--outline_sm)',
+});
+
+const rounded = css.compose({
+  '--border-radius': 'var(--radii_rounded)',
+});
+
+const shadowed = css.compose({
+  '--box-shadow': 'var(--shadow_md)',
+});
+
+const interactive = css.compose({
+  '--cursor': 'pointer',
+  '--transition': 'var(--morph_colors)',
+});
+
+const card = css.compose({
+  includes: [focusable, rounded, shadowed, interactive],
+  '--padding': 4,
+  '--background': 'var(--color_white)',
+});
+```
+
+Styles are merged in order, with later includes overriding earlier ones (conflicts moved inline).
+
+## Real-World Example
+
+Here's how you might build a component system with shared patterns:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// Shared focus ring for accessibility
+const focusRing = css({
+  '--focus-visible_outline': 'var(--outline_focus)',
+  '--focus-visible_outline-offset': 2,
+});
+
+// Base interactive element
+const interactive = css.compose({
+  '--cursor': 'pointer',
+  '--transition': 'var(--morph_colors)',
+  '--user-select': 'none',
+});
+
+// Button base
+const buttonBase = css.compose({
+  includes: [interactive, focusRing],
+  '--display': 'inline-flex',
+  '--align-items': 'center',
+  '--justify-content': 'center',
+  '--border-radius': 'var(--radii_md)',
+  '--font-weight': 'var(--weight_medium)',
+  '--padding-inline': 4,
+  '--padding-block': 2,
+});
+
+// Primary button variant
+const primaryButton = css.compose({
+  includes: [buttonBase],
+  '--background': 'var(--color_primary)',
+  '--color': 'var(--color_white)',
+  '--hover_background': 'var(--color_primary-dark)',
+});
+
+// Secondary button variant
+const secondaryButton = css.compose({
+  includes: [buttonBase],
+  '--background': 'var(--color_gray2)',
+  '--color': 'var(--color_gray12)',
+  '--hover_background': 'var(--color_gray3)',
+});
+
+export function PrimaryButton(props) {
+  const [cn, css] = primaryButton();
+  return <button {...props} className={cn(props.className)} style={css(props.style)} />;
+}
+
+export function SecondaryButton(props) {
+  const [cn, css] = secondaryButton();
+  return <button {...props} className={cn(props.className)} style={css(props.style)} />;
+}
+```
+
+This pattern lets you:
+
+1. Define shared patterns once (focusRing, interactive)
+2. Build base components that combine patterns (buttonBase)
+3. Create variants that override specific properties (primaryButton, secondaryButton)
+4. Maintain consistency across your design system
+
+## Order of Precedence
+
+When multiple includes define the same property, the order of precedence is:
+
+1. Earlier includes (lowest priority)
+2. Later includes
+3. Base styles in the current compose
+4. Variants
+5. Runtime overrides (highest priority)
+
+```tsx
+const styleA = css.compose({ '--padding': 2 });
+const styleB = css.compose({ '--padding': 4 });
+
+const combined = css.compose({
+  includes: [styleA, styleB], // styleB wins
+  '--padding': 6,              // This wins over both includes
+});
+```
+
+In this example, `--padding: 6` is moved inline because it conflicts with the included styles.
+
+## Type Safety
+
+TypeScript ensures you're including compatible styles. The includes array accepts:
+
+- Results from `css.compose()` (with or without variants)
+- Results from `css()` utility
+- Any `TokenamiCSS` or `TokenamiComposeOutput` types
+
+```tsx
+const button = css.compose({ '--padding': 4 });
+const focusable = css({ '--focus_outline': 'var(--outline_sm)' });
+
+const myButton = css.compose({
+  includes: [button, focusable], // ✅ Type-safe
+});
+
+// ❌ TypeScript error - wrong type
+const invalid = css.compose({
+  includes: ['not-a-style'],
+});
+```
+
+## Performance
+
+The includes feature is designed for performance:
+
+- Included styles are resolved at definition time, not runtime
+- Results are cached, so repeated calls return the same reference
+- Class names are reused when possible
+- Only conflicting properties are moved inline
+
+This makes composition cheap and encourages building reusable patterns in your design system.

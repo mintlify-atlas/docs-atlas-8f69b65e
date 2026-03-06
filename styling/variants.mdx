@@ -1,0 +1,302 @@
+---
+title: Variants
+description: Create type-safe style variations with the variants system
+---
+
+The `variants` feature in `css.compose` lets you define different style variations for your components. This is similar to variant systems in other styling libraries, but with full type safety based on your Tokenami configuration.
+
+## Basic Usage
+
+Define variants in the `variants` object within `css.compose`:
+
+```tsx
+import { css, type Variants } from '@tokenami/css';
+
+const button = css.compose({
+  // Base styles
+  '--border-radius': 'var(--radii_rounded)',
+  '--color': 'var(--color_white)',
+  '--font-size': 'var(--text-size_sm)',
+
+  variants: {
+    color: {
+      blue: { '--background-color': 'var(--color_blue)' },
+      green: { '--background-color': 'var(--color_green)' },
+    },
+    size: {
+      small: { '--padding': 2 },
+      large: { '--padding': 6 },
+    },
+  },
+});
+```
+
+## Applying Variants
+
+Pass variant selections when calling the composed function:
+
+```tsx
+function Card(props) {
+  const [cn, css] = button({ color: 'blue', size: 'large' });
+  return (
+    <div 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)} 
+    />
+  );
+}
+```
+
+### Generated Output
+
+Variants are applied as **inline styles**, not additional classes:
+
+```html
+<div 
+  class="tk-abc" 
+  style="--background-color: var(--color_blue); --padding: 6;"
+>
+  Content
+</div>
+```
+
+This keeps the CSS file small while providing flexible runtime variations.
+
+## Type Safety with Variants
+
+Use the `Variants` utility type to extract variant types for your component props:
+
+```tsx
+import { type Variants, type TokenamiStyle, css } from '@tokenami/css';
+
+interface ButtonProps 
+  extends React.ComponentProps<'button'>,
+    Variants<typeof button> {}
+
+function Button(props: ButtonProps) {
+  const { size = 'small', color, ...buttonProps } = props;
+  const [cn, css] = button({ size, color });
+  return (
+    <button 
+      {...buttonProps}
+      className={cn(props.className)} 
+      style={css(props.style)}
+    />
+  );
+}
+
+// TypeScript now knows about size and color props:
+<Button size="large" color="blue">Click me</Button>
+```
+
+## Real-World Example
+
+Here's a complete example from the Tokenami codebase showing an IconButton with size variants:
+
+```tsx
+import { type Variants, type TokenamiStyle, css } from '@tokenami/css';
+
+interface IconButtonProps
+  extends TokenamiStyle<React.ComponentProps<'button'>>,
+    Variants<typeof iconButton> {
+  icon: string;
+  children: React.ReactNode;
+}
+
+function IconButton({ size, icon, ...props }: IconButtonProps) {
+  const [cn, css] = iconButton({ size });
+  return (
+    <button 
+      type="button" 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)}
+    >
+      <Icon name={icon} size={size} />
+      <span className={srOnly()}>{props.children}</span>
+    </button>
+  );
+}
+
+const iconButton = css.compose({
+  '--display': 'flex',
+  '--align-items': 'center',
+  '--justify-content': 'center',
+  '--border-radius': 'var(--radii_full)',
+  '--background-color': 'var(--color_gray2)',
+  '--color': 'var(--color_gray11)',
+  '--transition': 'var(--morph_colors)',
+  '--size': 7,
+  '--hover_background-color': 'var(--color_gray5)',
+  '--hover_color': 'var(--color_gray12)',
+
+  variants: {
+    size: {
+      sm: { '--size': 6 },
+      md: { '--size': 8 },
+      lg: { '--size': 9 },
+      xl: { '--size': 10 },
+      '2xl': { '--size': 14 },
+    },
+  },
+});
+```
+
+## Multiple Variants
+
+You can select multiple variants at once. Each variant applies its styles independently:
+
+```tsx
+const card = css.compose({
+  '--border-radius': 'var(--radii_rounded)',
+
+  variants: {
+    color: {
+      blue: { '--background-color': 'var(--color_blue)' },
+      green: { '--background-color': 'var(--color_green)' },
+    },
+    size: {
+      small: { '--padding': 2 },
+      large: { '--padding': 6 },
+    },
+    border: {
+      true: { '--border': 'var(--line_px)' },
+      false: {},
+    },
+  },
+});
+
+// Use multiple variants together
+function Card(props) {
+  const [cn, css] = card({ 
+    color: 'blue', 
+    size: 'large',
+    border: true 
+  });
+  return <div className={cn()} style={css()} />;
+}
+```
+
+## Variant Types
+
+Variant values can be:
+
+### String variants
+
+```tsx
+variants: {
+  color: {
+    blue: { '--background-color': 'var(--color_blue)' },
+    green: { '--background-color': 'var(--color_green)' },
+  },
+}
+
+// TypeScript type: color?: 'blue' | 'green'
+```
+
+### Number variants
+
+```tsx
+variants: {
+  variant: {
+    1: { '--font': 'var(--text_3xl)' },
+    2: { '--font': 'var(--text_2xl)' },
+    3: { '--font': 'var(--text_xl)' },
+  },
+}
+
+// TypeScript type: variant?: 1 | 2 | 3
+```
+
+### Boolean variants
+
+```tsx
+variants: {
+  active: {
+    true: { '--background-color': 'var(--color_blue)' },
+    false: { '--background-color': 'var(--color_gray)' },
+  },
+}
+
+// TypeScript type: active?: boolean
+```
+
+## Default Variants
+
+Set default variants in your component by destructuring with defaults:
+
+```tsx
+function Button({ size = 'small', color = 'blue', ...props }: ButtonProps) {
+  const [cn, css] = button({ size, color });
+  return <button className={cn()} style={css()} {...props} />;
+}
+```
+
+## Variant Overrides
+
+Variant styles are treated as overrides, so they appear inline. This means they can be further overridden by props:
+
+```tsx
+function Button(props: ButtonProps) {
+  const { size = 'small', ...rest } = props;
+  const [cn, css] = button({ size });
+  return (
+    <button 
+      {...rest}
+      className={cn(props.className)}
+      // props.style can override variant styles
+      style={css(props.style)}
+    />
+  );
+}
+
+// This works - style prop overrides the size variant
+<Button size="large" style={{ '--padding': 10 }} />
+```
+
+## Combining with Overrides
+
+The `style` function from a variant-enabled compose works exactly like the regular `css` utility:
+
+```tsx
+function Button(props: ButtonProps) {
+  const { size, disabled, ...rest } = props;
+  const [cn, css] = button({ size });
+  
+  const disabledStyles = disabled && {
+    '--opacity': 0.5,
+    '--pointer-events': 'none',
+  };
+  
+  return (
+    <button
+      {...rest}
+      className={cn(props.className)}
+      style={css(
+        disabledStyles,  // Conditional override
+        props.style      // Props override
+      )}
+    />
+  );
+}
+```
+
+The order of precedence is:
+
+1. Base composed styles (in CSS file)
+2. Variant styles (inline)
+3. Additional overrides (inline)
+4. Props style (inline)
+
+## Performance Considerations
+
+Variants are cached along with their selected values, so repeatedly calling the same variant configuration is performant:
+
+```tsx
+// These calls are cached
+const [cn1, css1] = button({ size: 'large' });
+const [cn2, css2] = button({ size: 'large' }); // Returns cached result
+```
+
+The cache uses LRU (Least Recently Used) eviction, so it won't grow unbounded.

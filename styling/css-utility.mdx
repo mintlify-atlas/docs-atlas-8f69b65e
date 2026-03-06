@@ -1,0 +1,152 @@
+---
+title: CSS Utility
+description: Use the css() function to author styles with safe overrides and low specificity
+---
+
+The `css` utility is the core function for authoring styles in Tokenami. It helps you write inline styles while avoiding specificity conflicts and provides a clean way to handle overrides.
+
+## Basic Usage
+
+The `css` function accepts Tokenami properties and returns an object suitable for the `style` attribute:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Page() {
+  return (
+    <h1 style={css({ '--margin-top': 0, '--margin-bottom': 5 })}>
+      Hello, World!
+    </h1>
+  );
+}
+```
+
+## Overrides
+
+Pass your base styles as the first parameter, then add any number of overrides as additional parameters. The last override wins:
+
+```tsx
+function Button(props) {
+  return (
+    <button
+      {...props}
+      style={css(
+        { '--padding': 4 }, // Base styles
+        props.style         // Props override
+      )}
+    />
+  );
+}
+```
+
+### Conditional Overrides
+
+Add conditional styles as extra parameters. The last override wins:
+
+```tsx
+function Button(props) {
+  const disabled = props.disabled && {
+    '--opacity': 0.5,
+    '--pointer-events': 'none',
+  };
+
+  return (
+    <button
+      {...props}
+      style={css(
+        { '--padding': 4 },  // Base styles
+        disabled,             // Conditional styles (false or object)
+        props.style           // Props override (highest priority)
+      )}
+    />
+  );
+}
+```
+
+## Return Type
+
+The `css` function returns a `TokenamiCSS` object. This type is intentionally opaque to work with framework type constraints, but it's compatible with the `style` prop in React and other frameworks.
+
+Frameworks typically limit the `style` type to `CSS.PropertiesHyphen` or `CSS.Properties`, which doesn't include custom properties. Tokenami's return type works around this limitation.
+
+## Creating a Custom CSS Utility
+
+When using custom [property aliases](/advanced/property-aliases), you must create a configured instance of the `css` utility to ensure conflicts are resolved correctly across component boundaries.
+
+### 1. Create a CSS utility file
+
+Create a file in your project (e.g. `css.ts`) to configure the utility:
+
+```ts
+import { createCss } from '@tokenami/css';
+import config from '../.tokenami/tokenami.config';
+
+export const css = createCss(config);
+export type * from '@tokenami/css';
+```
+
+### 2. Use your custom utility
+
+Import from your custom file instead of `@tokenami/css`:
+
+```tsx
+import { css } from './css';
+
+function Button() {
+  return (
+    <button style={css({ '--p': 4, '--px': 2 })}>
+      Click me
+    </button>
+  );
+}
+```
+
+## Configuration Options
+
+<ParamField path="config" type="Pick<Config, 'aliases'>" required>
+  The Tokenami configuration object containing property aliases. Required when using custom aliases.
+</ParamField>
+
+<ParamField path="options.escapeSpecialChars" type="boolean" default="true">
+  When using arbitrary values, Tokenami escapes special characters by default. Some frameworks automatically escape, which would result in double-escaping. Set this to `false` to disable Tokenami's escaping:
+  
+  ```ts
+  export const css = createCss(config, { escapeSpecialChars: false });
+  ```
+</ParamField>
+
+## Type Safety
+
+The `css` utility provides autocomplete and type checking for all Tokenami properties based on your theme configuration. TypeScript will catch:
+
+- Invalid property names
+- Theme token mismatches
+- Incorrect value types
+
+For components that accept Tokenami styles via props, use the `TokenamiStyle` utility type:
+
+```tsx
+import { type TokenamiStyle, css } from '@tokenami/css';
+
+interface ButtonProps extends TokenamiStyle<React.ComponentProps<'button'>> {}
+
+function Button(props: ButtonProps) {
+  return <button {...props} style={css({}, props.style)} />;
+}
+
+// Now you can pass Tokenami properties with type checking:
+<Button style={{ '--padding': 4 }} />
+```
+
+## Why No Specificity Issues?
+
+Tokenami applies styles using CSS custom properties on the `style` attribute. Since custom properties inherit and can be overridden at any level, you get predictable cascade behavior without specificity conflicts.
+
+The `css` utility ensures that:
+
+1. Inline styles always have the highest specificity
+2. Overrides are applied in order, with later overrides winning
+3. Shorthand properties correctly override longhand properties
+4. Calculated values are properly toggled
+
+This makes composition simple and predictable, without needing tools like `tailwind-merge` to handle conflicts.

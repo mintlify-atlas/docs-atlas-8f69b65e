@@ -1,0 +1,278 @@
+---
+title: createConfig
+description: Create a type-safe Tokenami configuration
+---
+
+The `createConfig` function creates a type-safe Tokenami configuration object. It provides TypeScript inference for your theme tokens, ensuring type safety throughout your application.
+
+## Import
+
+```typescript
+import { createConfig } from '@tokenami/css';
+// or
+import { createConfig } from '@tokenami/config';
+```
+
+## Signature
+
+```typescript
+function createConfig<C extends Config>(config: C): C
+```
+
+<ParamField path="config" type="Config" required>
+  The complete Tokenami configuration object.
+</ParamField>
+
+<ResponseField name="config" type="Config">
+  The same config object, typed for TypeScript inference.
+</ResponseField>
+
+## Usage
+
+### Basic Configuration
+
+Create a minimal config file:
+
+```typescript title="tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  include: ['./app/**/*.{ts,tsx}'],
+  
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d',
+      white: '#ffffff',
+      black: '#000000'
+    },
+    space: {
+      1: '0.25rem',
+      2: '0.5rem',
+      3: '0.75rem',
+      4: '1rem'
+    }
+  }
+});
+```
+
+### Complete Configuration
+
+A full-featured configuration with all options:
+
+```typescript title="tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+import type { Config } from '@tokenami/css';
+
+export default createConfig({
+  // Required: Files to scan for token usage
+  include: ['./src/**/*.{ts,tsx,js,jsx}'],
+  
+  // Optional: Files to exclude from scanning
+  exclude: ['./src/**/*.test.{ts,tsx}'],
+  
+  // Grid system base unit
+  grid: '0.25rem',
+  
+  // Theme tokens
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d',
+      danger: '#dc3545',
+      success: '#28a745'
+    },
+    space: {
+      0: '0',
+      1: '0.25rem',
+      2: '0.5rem',
+      3: '0.75rem',
+      4: '1rem',
+      6: '1.5rem',
+      8: '2rem'
+    },
+    'font-size': {
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem'
+    },
+    radius: {
+      sm: '0.125rem',
+      md: '0.25rem',
+      lg: '0.5rem',
+      full: '9999px'
+    }
+  },
+  
+  // Responsive breakpoints
+  responsive: {
+    sm: '@media (min-width: 640px)',
+    md: '@media (min-width: 768px)',
+    lg: '@media (min-width: 1024px)',
+    xl: '@media (min-width: 1280px)'
+  },
+  
+  // Custom selectors
+  selectors: {
+    hover: '&:hover',
+    focus: '&:focus',
+    active: '&:active',
+    disabled: '&:disabled',
+    dark: '[data-theme="dark"] &'
+  },
+  
+  // Property aliases
+  aliases: {
+    px: ['padding-left', 'padding-right'],
+    py: ['padding-top', 'padding-bottom'],
+    mx: ['margin-left', 'margin-right'],
+    my: ['margin-top', 'margin-bottom']
+  },
+  
+  // Map properties to theme keys
+  properties: {
+    'background-color': ['color'],
+    color: ['color'],
+    'border-color': ['color'],
+    padding: ['space'],
+    margin: ['space'],
+    gap: ['space'],
+    'font-size': ['font-size'],
+    'border-radius': ['radius']
+  },
+  
+  // Custom properties (not in CSS spec)
+  customProperties: {
+    'custom-spacing': ['space']
+  },
+  
+  // Global styles
+  globalStyles: {
+    '*': {
+      boxSizing: 'border-box',
+      margin: 0,
+      padding: 0
+    },
+    body: {
+      fontFamily: 'system-ui, sans-serif',
+      lineHeight: 1.5
+    }
+  },
+  
+  // CSS keyframes
+  keyframes: {
+    fadeIn: {
+      '0%': { opacity: 0 },
+      '100%': { opacity: 1 }
+    },
+    slideUp: {
+      '0%': { transform: 'translateY(100%)' },
+      '100%': { transform: 'translateY(0)' }
+    }
+  },
+  
+  // Theme mode selector
+  themeSelector: (mode) => `[data-theme="${mode}"]`
+});
+```
+
+### With Theme Modes
+
+Define different theme modes (e.g., light/dark):
+
+```typescript title="tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  include: ['./src/**/*.{ts,tsx}'],
+  
+  theme: {
+    root: {
+      // Tokens available in all modes
+      space: {
+        1: '0.25rem',
+        2: '0.5rem',
+        3: '0.75rem',
+        4: '1rem'
+      }
+    },
+    modes: {
+      light: {
+        color: {
+          bg: '#ffffff',
+          text: '#000000',
+          primary: '#007bff'
+        }
+      },
+      dark: {
+        color: {
+          bg: '#000000',
+          text: '#ffffff',
+          primary: '#66b3ff'
+        }
+      }
+    }
+  },
+  
+  themeSelector: (mode) => `[data-theme="${mode}"]`
+});
+```
+
+### JavaScript Configuration
+
+For JavaScript projects, use JSDoc for type hints:
+
+```javascript title="tokenami.config.js"
+import { createConfig } from '@tokenami/css';
+
+/** @type {import('@tokenami/css').Config} */
+export default createConfig({
+  include: ['./src/**/*.{js,jsx}'],
+  
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d'
+    }
+  }
+});
+```
+
+## Type Safety
+
+The `createConfig` function enables full type inference:
+
+```typescript
+const config = createConfig({
+  include: ['./src/**/*.tsx'],
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d'
+    }
+  },
+  properties: {
+    color: ['color']  // ✅ 'color' exists in theme
+    // color: ['size']  // ❌ TypeScript error: 'size' doesn't exist
+  }
+});
+```
+
+## Configuration Loading
+
+The CLI automatically loads your config file:
+
+```bash
+# Loads ./tokenami.config.ts or ./tokenami.config.js
+tokenami
+
+# Load from custom path
+tokenami --config ./config/tokens.ts
+```
+
+## Related
+
+- [Config Options](/api/config-options) - Complete configuration reference
+- [createCss](/api/create-css) - Create a css function with config
+- [CLI](/api/cli/commands) - Use configuration with the CLI

@@ -1,0 +1,55 @@
+---
+title: Editor Setup
+description: Configure your editor for the best Tokenami development experience
+---
+
+## VS Code String Completions
+
+VS Code won't suggest completions for partial strings by default. This prevents Tokenami from updating its suggestions as you type. To enable this feature, add the following to `.vscode/settings.json` in your project:
+
+```json
+{
+  "editor.quickSuggestions": {
+    "strings": true
+  }
+}
+```
+
+### Before and After
+
+| BEFORE | AFTER |
+| ------ | ----- |
+| ![Before string completions](https://github.com/user-attachments/assets/9b99edb4-dec0-402e-99c9-671525332ccf) | ![After string completions](https://github.com/user-attachments/assets/ad2ed719-c2ca-4929-902d-5fdf5142468b) |
+
+## Improve Autocomplete Speed and Accuracy
+
+Some editors that Tokenami integrates with (such as VS Code and Cursor) support VS Code–style configuration settings. If you feel Tokenami's completions are slow or match on irrelevant suggestions, you can refine IntelliSense behaviour by adding the following settings to your workspace `.vscode/settings.json`:
+
+```json
+{
+  "editor.suggest.filterGraceful": false,
+  "editor.suggest.matchOnWordStartOnly": true
+}
+```
+
+### What These Settings Do
+
+- **`editor.suggest.filterGraceful: false`**: Filters out loosely related suggestions so closer matches are shown.
+- **`editor.suggest.matchOnWordStartOnly: true`**: Reduces noise by prioritising suggestions that begin with your typed characters.
+
+## Supported Editors
+
+Tokenami is officially supported in the following editors:
+
+- [VSCode](https://code.visualstudio.com/)
+- [Cursor](https://www.cursor.com/)
+- [Windsurf](https://windsurf.com/)
+- [Zed](https://zed.dev/)
+
+## TypeScript Configuration
+
+Make sure your editor uses the workspace TypeScript version. For VS Code, see the [official documentation](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) on how to configure this.
+
+## Need Help?
+
+If you encounter any issues with your editor setup, join our [Discord server](https://discord.gg/CAU4HNR4XK) for assistance.

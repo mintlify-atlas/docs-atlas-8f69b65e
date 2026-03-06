@@ -1,0 +1,267 @@
+---
+title: TokenValue
+description: Type and parser for theme token value references
+---
+
+The `TokenValue` type represents a reference to a theme token value in the format `var(--{themeKey}_{tokenName})`. It's used throughout Tokenami to reference values from your theme configuration.
+
+## Import
+
+```typescript
+import type { TokenValue } from '@tokenami/css';
+// or from config
+import type { TokenValue } from '@tokenami/config';
+```
+
+## Type Signature
+
+```typescript
+type TokenValue<TK extends string = string, V extends string = string> = 
+  `var(--${TK}_${V})`
+```
+
+<ParamField path="TK" type="string">
+  The theme key (e.g., `'color'`, `'space'`, `'font-size'`).
+</ParamField>
+
+<ParamField path="V" type="string">
+  The token name within that theme key (e.g., `'primary'`, `'4'`, `'lg'`).
+</ParamField>
+
+## Format
+
+Token values follow the pattern:
+
+```
+var(--{themeKey}_{tokenName})
+```
+
+Examples:
+- `var(--color_primary)` - `primary` token from `color` theme key
+- `var(--space_4)` - `4` token from `space` theme key
+- `var(--font-size_lg)` - `lg` token from `font-size` theme key
+
+## Usage in Configuration
+
+### Defining Theme Tokens
+
+Tokens defined in your config are referenced as token values:
+
+```typescript title="tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  include: ['./src/**/*.tsx'],
+  
+  theme: {
+    color: {
+      primary: '#007bff',    // Referenced as: var(--color_primary)
+      secondary: '#6c757d',  // Referenced as: var(--color_secondary)
+      danger: '#dc3545'      // Referenced as: var(--color_danger)
+    },
+    space: {
+      1: '0.25rem',  // Referenced as: var(--space_1)
+      2: '0.5rem',   // Referenced as: var(--space_2)
+      4: '1rem'      // Referenced as: var(--space_4)
+    },
+    'font-size': {
+      sm: '0.875rem',  // Referenced as: var(--font-size_sm)
+      base: '1rem',    // Referenced as: var(--font-size_base)
+      lg: '1.125rem'   // Referenced as: var(--font-size_lg)
+    }
+  }
+});
+```
+
+## Usage in Styles
+
+### Basic Token References
+
+Reference theme tokens in your styles:
+
+```tsx
+import { css } from '@tokenami/css';
+
+const styles = css({
+  '--color': 'var(--color_primary)',
+  '--padding': 'var(--space_4)',
+  '--font-size': 'var(--font-size_lg)',
+  '--background-color': 'var(--color_secondary)'
+});
+```
+
+### Type-Safe Token References
+
+With proper TypeScript setup, token references are fully type-safe:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// ✅ Valid - token exists in theme
+const styles = css({
+  '--color': 'var(--color_primary)'
+});
+
+// ❌ TypeScript error - token doesn't exist
+const styles = css({
+  '--color': 'var(--color_invalid)'
+});
+```
+
+### In Composed Styles
+
+Use token values in composed component styles:
+
+```tsx
+import { css } from '@tokenami/css';
+
+const button = css.compose({
+  '--padding': 'var(--space_3)',
+  '--border-radius': 'var(--radius_md)',
+  '--font-weight': 'var(--font-weight_semibold)',
+  
+  variants: {
+    variant: {
+      primary: {
+        '--background-color': 'var(--color_primary)',
+        '--color': 'var(--color_white)'
+      },
+      secondary: {
+        '--background-color': 'var(--color_gray-200)',
+        '--color': 'var(--color_gray-900)'
+      }
+    },
+    size: {
+      sm: { '--padding': 'var(--space_2)' },
+      lg: { '--padding': 'var(--space_5)' }
+    }
+  }
+});
+```
+
+## Parser API
+
+### TokenValue.safeParse
+
+The `TokenValue` type includes a parser for runtime validation:
+
+```typescript
+import { TokenValue } from '@tokenami/config';
+
+// Valid token value
+const result1 = TokenValue.safeParse('var(--color_primary)');
+// { success: true, output: 'var(--color_primary)' }
+
+// Invalid token value
+const result2 = TokenValue.safeParse('var(--invalid)');
+// { success: false }
+
+const result3 = TokenValue.safeParse('not-a-token');
+// { success: false }
+```
+
+### Extracting Token Parts
+
+Extract the theme key and token name from a token value:
+
+```typescript
+import { getTokenValueParts } from '@tokenami/config';
+
+const parts = getTokenValueParts('var(--color_primary)');
+// {
+//   property: '--color_primary',
+//   themeKey: 'color',
+//   token: 'primary'
+// }
+
+const parts2 = getTokenValueParts('var(--space_4)');
+// {
+//   property: '--space_4',
+//   themeKey: 'space',
+//   token: '4'
+// }
+```
+
+## Arbitrary Values
+
+For one-off values not in your theme, use arbitrary values:
+
+```tsx
+import { css } from '@tokenami/css';
+
+const styles = css({
+  '--color': 'var(---, #ff0000)',      // Arbitrary color
+  '--padding': 'var(---, 1.5rem)',     // Arbitrary spacing
+  '--width': 'var(---, 250px)'         // Arbitrary size
+});
+```
+
+Arbitrary values use a special format: `var(---, value)`
+
+## Grid Values
+
+Numeric values automatically use your grid system:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// With grid: '0.25rem'
+const styles = css({
+  '--padding': 4,  // Becomes: calc(var(--_grid) * 4) = 1rem
+  '--margin': 8    // Becomes: calc(var(--_grid) * 8) = 2rem
+});
+```
+
+No need for token value syntax - just use numbers.
+
+## Token Value vs Token Property
+
+**Token Value** (this page):
+- Format: `var(--{themeKey}_{tokenName})`
+- Used as CSS property *values*
+- Example: `'var(--color_primary)'`
+
+**Token Property**:
+- Format: `--{propertyName}`
+- Used as CSS property *names*
+- Example: `'--color'`, `'--padding'`, `'--md_padding'`
+
+```tsx
+const styles = css({
+  '--color': 'var(--color_primary)'
+  // ^^^^^^^ Token Property (name)
+  //         ^^^^^^^^^^^^^^^^^^^^^ Token Value (value)
+});
+```
+
+## Type Inference
+
+When properly configured, TypeScript infers available token values:
+
+```typescript
+// tokenami.config.ts
+export default createConfig({
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d'
+    }
+  },
+  properties: {
+    'color': ['color']  // Maps 'color' property to 'color' theme key
+  }
+});
+
+// In your code - TypeScript knows valid values
+const styles = css({
+  '--color': 'var(--color_primary)'    // ✅ Autocomplete + type checking
+  '--color': 'var(--color_secondary)'  // ✅ Autocomplete + type checking
+  '--color': 'var(--color_tertiary)'   // ❌ Type error
+});
+```
+
+## Related
+
+- [Config Options](/api/config-options) - Define theme tokens
+- [TokenamiStyle](/api/types/tokenami-style) - Type helper for component props
+- [css](/api/css) - Use token values in styles

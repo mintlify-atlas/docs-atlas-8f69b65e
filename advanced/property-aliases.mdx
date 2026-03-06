@@ -1,0 +1,264 @@
+---
+title: "Property Aliases"
+description: "Create shorthand names for CSS properties to write styles faster"
+---
+
+## Overview
+
+Property aliases let you create shorthand names for CSS properties, making your styles more concise. For example, `--p` for `padding`, `--px` for `padding-inline`, or `--size` to set both `width` and `height` at once.
+
+<Warning>
+When using custom aliases, you must configure the `css` utility with `createCss` to ensure style conflicts are resolved correctly across component boundaries.
+</Warning>
+
+## Setup
+
+### 1. Configure Aliases
+
+Define your aliases in `tokenami.config.ts`:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  aliases: {
+    p: ['padding'],
+    px: ['padding-inline'],
+    py: ['padding-block'],
+    m: ['margin'],
+    mx: ['margin-inline'],
+    my: ['margin-block'],
+    size: ['width', 'height'],
+  },
+});
+```
+
+### 2. Create Custom CSS Utility
+
+Create a file in your project (e.g., `css.ts`) to configure the `css` utility:
+
+```ts
+// css.ts
+import { createCss } from '@tokenami/css';
+import config from '../.tokenami/tokenami.config';
+
+export const css = createCss(config);
+```
+
+### 3. Import From Your File
+
+Replace imports of `css` from `@tokenami/css` with your custom utility:
+
+```tsx
+// Before
+import { css } from '@tokenami/css';
+
+// After
+import { css } from './css';
+```
+
+## Usage
+
+Once configured, use your aliases like any other Tokenami property:
+
+```tsx
+import { css } from './css';
+
+function Button() {
+  return (
+    <button style={css({
+      '--p': 4,              // padding: 1rem (4 * 0.25rem)
+      '--px': 6,             // padding-inline: 1.5rem
+      '--m': 2,              // margin: 0.5rem
+      '--size': '100%',      // width and height: 100%
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+## Why createCss is Required
+
+Aliases can create conflicts when styles are composed. For example:
+
+```tsx
+// Without createCss, which wins?
+const baseStyles = { '--p': 4 };        // padding: 1rem
+const overrides = { '--padding': 2 };   // padding: 0.5rem
+
+style={css(baseStyles, overrides)}
+```
+
+The `createCss` utility understands that `--p` and `--padding` refer to the same property and resolves conflicts correctly, ensuring the last override always wins.
+
+## Common Aliases
+
+Here are some commonly used alias patterns:
+
+<AccordionGroup>
+  <Accordion title="Spacing aliases">
+    ```ts
+    aliases: {
+      p: ['padding'],
+      px: ['padding-inline'],
+      py: ['padding-block'],
+      pt: ['padding-top'],
+      pr: ['padding-right'],
+      pb: ['padding-bottom'],
+      pl: ['padding-left'],
+      m: ['margin'],
+      mx: ['margin-inline'],
+      my: ['margin-block'],
+      mt: ['margin-top'],
+      mr: ['margin-right'],
+      mb: ['margin-bottom'],
+      ml: ['margin-left'],
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Size aliases">
+    ```ts
+    aliases: {
+      size: ['width', 'height'],
+      w: ['width'],
+      h: ['height'],
+      minSize: ['min-width', 'min-height'],
+      maxSize: ['max-width', 'max-height'],
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Border aliases">
+    ```ts
+    aliases: {
+      rounded: ['border-radius'],
+      'rounded-t': ['border-top-left-radius', 'border-top-right-radius'],
+      'rounded-b': ['border-bottom-left-radius', 'border-bottom-right-radius'],
+      border: ['border-width', 'border-style', 'border-color'],
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Typography aliases">
+    ```ts
+    aliases: {
+      text: ['font-size'],
+      font: ['font-family'],
+      leading: ['line-height'],
+      tracking: ['letter-spacing'],
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Multi-Property Aliases
+
+Aliases can map to multiple properties, allowing you to set several values at once:
+
+```tsx
+aliases: {
+  size: ['width', 'height'],
+  inset: ['top', 'right', 'bottom', 'left'],
+}
+
+// Usage
+<div style={css({
+  '--size': 10,      // Sets both width and height
+  '--inset': 0,      // Sets all position values
+})} />
+```
+
+## Using the Official Design System
+
+The [@tokenami/ds](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) package comes with pre-configured aliases for common properties:
+
+- `--p`, `--px`, `--py` for padding
+- `--m`, `--mx`, `--my` for margin
+- `--size` for width and height
+- `--rounded` for border-radius
+- And many more...
+
+Check the [design system documentation](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) for the complete list.
+
+## Type Safety
+
+With `createCss` configured, TypeScript will:
+
+- Autocomplete your custom aliases
+- Type-check alias values against your theme
+- Show errors for conflicting properties
+
+```tsx
+// TypeScript will autocomplete and validate
+style={css({
+  '--p': 4,                           // ✓ Valid
+  '--p': 'var(--space_lg)',          // ✓ Valid theme token
+  '--p': 'invalid',                   // ✗ Type error
+})}
+```
+
+## Best Practices
+
+<Check>Keep alias names short but recognizable</Check>
+<Check>Follow common conventions (e.g., `px` for horizontal padding)</Check>
+<Check>Document custom aliases in your project README</Check>
+<Warning>Don't create aliases that conflict with CSS property names</Warning>
+<Warning>Avoid overly cryptic abbreviations that hurt readability</Warning>
+
+## Example: Complete Setup
+
+Here's a complete example with aliases configured:
+
+```ts title=".tokenami/tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      primary: '#0066cc',
+      secondary: '#6c757d',
+    },
+  },
+  aliases: {
+    p: ['padding'],
+    m: ['margin'],
+    size: ['width', 'height'],
+  },
+});
+```
+
+```ts title="src/css.ts"
+import { createCss } from '@tokenami/css';
+import config from '../.tokenami/tokenami.config';
+
+export const css = createCss(config);
+```
+
+```tsx title="src/Button.tsx"
+import { css } from './css';
+
+export function Button() {
+  return (
+    <button style={css({
+      '--p': 4,
+      '--size': '100%',
+      '--background': 'var(--color_primary)',
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="createCss API" icon="code" href="/api/create-css">
+    Learn more about the createCss function
+  </Card>
+  <Card title="Official Design System" icon="palette" href="/design-systems/official-system">
+    Use pre-configured aliases from @tokenami/ds
+  </Card>
+</CardGroup>

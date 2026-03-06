@@ -1,0 +1,454 @@
+---
+title: 'Animation'
+description: 'Configure keyframes and animation tokens'
+---
+
+# Animation
+
+Tokenami allows you to define reusable animation keyframes in your configuration and reference them through theme tokens.
+
+## Basic Configuration
+
+Define keyframes and reference them in your theme:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  keyframes: {
+    fadeIn: {
+      from: { opacity: '0' },
+      to: { opacity: '1' },
+    },
+  },
+  theme: {
+    anim: {
+      'fade-in': 'fadeIn 0.3s ease-in',
+    },
+  },
+});
+```
+
+## Using Animations
+
+Apply animations using the animation property:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({ '--animation': 'var(--anim_fade-in)' })} />
+```
+
+## Official System Animations
+
+The [@tokenami/ds](/design-systems/official-system) package includes several useful animations:
+
+### Spin
+
+Continuous rotation (useful for loading spinners):
+
+```tsx
+css({ '--animation': 'var(--anim_spin)' })
+// Results in: spin 1s linear infinite
+```
+
+```ts
+keyframes: {
+  spin: {
+    from: { transform: 'rotate(0deg)' },
+    to: { transform: 'rotate(360deg)' },
+  },
+}
+```
+
+### Ping
+
+Pulse and scale effect:
+
+```tsx
+css({ '--animation': 'var(--anim_ping)' })
+// Results in: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite
+```
+
+```ts
+keyframes: {
+  ping: {
+    '75%, 100%': {
+      transform: 'scale(2)',
+      opacity: '0',
+    },
+  },
+}
+```
+
+### Pulse
+
+Opacity fade in and out:
+
+```tsx
+css({ '--animation': 'var(--anim_pulse)' })
+// Results in: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite
+```
+
+```ts
+keyframes: {
+  pulse: {
+    '0%, 100%': { opacity: '1' },
+    '50%': { opacity: '.5' },
+  },
+}
+```
+
+### Bounce
+
+Bouncing effect:
+
+```tsx
+css({ '--animation': 'var(--anim_bounce)' })
+// Results in: bounce 1s infinite
+```
+
+```ts
+keyframes: {
+  bounce: {
+    '0%, 100%': {
+      transform: 'translateY(-25%)',
+      animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
+    },
+    '50%': {
+      transform: 'translateY(0)',
+      animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+    },
+  },
+}
+```
+
+### Wiggle
+
+Rotation wiggle:
+
+```tsx
+css({ '--animation': 'var(--anim_wiggle)' })
+// Results in: wiggle 1s ease-in-out infinite
+```
+
+```ts
+keyframes: {
+  wiggle: {
+    '0%, 100%': { transform: 'rotate(-3deg)' },
+    '50%': { transform: 'rotate(3deg)' },
+  },
+}
+```
+
+## Creating Custom Animations
+
+### Slide In
+
+```ts
+keyframes: {
+  slideInRight: {
+    from: {
+      transform: 'translateX(100%)',
+      opacity: '0',
+    },
+    to: {
+      transform: 'translateX(0)',
+      opacity: '1',
+    },
+  },
+  slideInLeft: {
+    from: {
+      transform: 'translateX(-100%)',
+      opacity: '0',
+    },
+    to: {
+      transform: 'translateX(0)',
+      opacity: '1',
+    },
+  },
+}
+```
+
+### Scale
+
+```ts
+keyframes: {
+  scaleIn: {
+    from: {
+      transform: 'scale(0)',
+      opacity: '0',
+    },
+    to: {
+      transform: 'scale(1)',
+      opacity: '1',
+    },
+  },
+  scaleOut: {
+    from: {
+      transform: 'scale(1)',
+      opacity: '1',
+    },
+    to: {
+      transform: 'scale(0)',
+      opacity: '0',
+    },
+  },
+}
+```
+
+### Shake
+
+```ts
+keyframes: {
+  shake: {
+    '0%, 100%': { transform: 'translateX(0)' },
+    '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
+    '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
+  },
+}
+```
+
+### Gradient Shift
+
+```ts
+keyframes: {
+  gradientShift: {
+    '0%': { backgroundPosition: '0% 50%' },
+    '50%': { backgroundPosition: '100% 50%' },
+    '100%': { backgroundPosition: '0% 50%' },
+  },
+}
+```
+
+### Glow
+
+```ts
+keyframes: {
+  glow: {
+    '0%, 100%': {
+      boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)',
+    },
+    '50%': {
+      boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)',
+    },
+  },
+}
+```
+
+## Animation Tokens
+
+Create a comprehensive set of animation tokens:
+
+```ts
+theme: {
+  anim: {
+    none: 'none',
+    
+    // Fades
+    'fade-in': 'fadeIn 0.3s ease-in',
+    'fade-out': 'fadeOut 0.3s ease-out',
+    
+    // Slides
+    'slide-in-right': 'slideInRight 0.4s ease-out',
+    'slide-in-left': 'slideInLeft 0.4s ease-out',
+    'slide-out-right': 'slideOutRight 0.4s ease-in',
+    'slide-out-left': 'slideOutLeft 0.4s ease-in',
+    
+    // Scales
+    'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+    'scale-out': 'scaleOut 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+    
+    // Effects
+    spin: 'spin 1s linear infinite',
+    bounce: 'bounce 1s infinite',
+    shake: 'shake 0.5s ease-in-out',
+    pulse: 'pulse 2s ease-in-out infinite',
+    glow: 'glow 2s ease-in-out infinite',
+  },
+}
+```
+
+## Pausing Animations
+
+Control animation playback:
+
+```tsx
+const [isPaused, setIsPaused] = useState(false);
+
+<div
+  style={css({
+    '--animation': 'var(--anim_spin)',
+    '--animation-play-state': isPaused ? 'paused' : 'running',
+  })}
+/>
+```
+
+## Animation Delays
+
+Add delays to stagger animations:
+
+```tsx
+<div
+  style={css({
+    '--animation': 'var(--anim_fade-in)',
+    '--animation-delay': '0.1s',
+  })}
+/>
+```
+
+## Fill Modes
+
+Control animation state before and after:
+
+```tsx
+css({
+  '--animation': 'var(--anim_fade-in)',
+  '--animation-fill-mode': 'forwards', // Maintains final state
+})
+```
+
+Options: `none`, `forwards`, `backwards`, `both`
+
+## Multiple Animations
+
+Apply multiple animations:
+
+```tsx
+css({
+  '--animation': 'fadeIn 0.3s ease-in, slideInRight 0.4s ease-out',
+})
+```
+
+Or create combined animation tokens:
+
+```ts
+theme: {
+  anim: {
+    'fade-slide-in': 'fadeIn 0.3s ease-in, slideInRight 0.4s ease-out',
+  },
+}
+```
+
+## Responsive Animations
+
+Different animations at different breakpoints:
+
+```tsx
+css({
+  '--animation': 'var(--anim_fade-in)',
+  '--md_animation': 'var(--anim_slide-in-left)',
+})
+```
+
+## Conditional Animations
+
+Animate on state changes:
+
+```tsx
+const [isVisible, setIsVisible] = useState(false);
+
+<div
+  style={css(
+    { '--opacity': 0 },
+    isVisible && { '--animation': 'var(--anim_fade-in)' }
+  )}
+/>
+```
+
+## Performance Considerations
+
+<AccordionGroup>
+  <Accordion title="Use transform and opacity">
+    These properties are GPU-accelerated and provide the smoothest animations. Avoid animating properties like `width`, `height`, or `top` when possible.
+  </Accordion>
+  
+  <Accordion title="Add will-change sparingly">
+    Use `will-change` to hint browser optimization, but remove it after animation completes:
+    ```tsx
+    css({
+      '--will-change': 'transform',
+      '--animation': 'var(--anim_slide-in)',
+    })
+    ```
+  </Accordion>
+  
+  <Accordion title="Respect prefers-reduced-motion">
+    Disable animations for users who prefer reduced motion:
+    ```tsx
+    css({
+      '--animation': 'var(--anim_fade-in)',
+      '--motion-reduce_animation': 'none',
+    })
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Easing Functions
+
+Define custom easing curves:
+
+```ts
+theme: {
+  ease: {
+    linear: 'linear',
+    in: 'cubic-bezier(0.4, 0, 1, 1)',
+    out: 'cubic-bezier(0, 0, 0.2, 1)',
+    'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+    'spring': 'cubic-bezier(0.16, 1, 0.3, 1)',
+    'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  },
+}
+```
+
+Use with animations:
+
+```ts
+anim: {
+  'fade-in-spring': 'fadeIn 0.4s var(--ease_spring)',
+}
+```
+
+## Loading Spinner Example
+
+```tsx
+const Spinner = () => (
+  <div
+    style={css({
+      '--width': 10,
+      '--height': 10,
+      '--border': 'var(--line_2)',
+      '--border-color': 'var(--color_slate4)',
+      '--border-top-color': 'var(--color_blue9)',
+      '--border-radius': 'var(--radii_full)',
+      '--animation': 'var(--anim_spin)',
+    })}
+  />
+);
+```
+
+## Notification Example
+
+```tsx
+const Notification = ({ message }) => (
+  <div
+    style={css({
+      '--animation': 'slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 2.7s',
+      '--animation-fill-mode': 'forwards',
+    })}
+  >
+    {message}
+  </div>
+);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Official System" icon="star" href="/design-systems/official-system">
+    Explore the @tokenami/ds package
+  </Card>
+  <Card title="Building Your Own" icon="hammer" href="/design-systems/building-your-own">
+    Create a custom design system
+  </Card>
+</CardGroup>

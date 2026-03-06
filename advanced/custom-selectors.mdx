@@ -1,0 +1,198 @@
+---
+title: "Custom Selectors"
+description: "Configure custom selectors to extend Tokenami's styling capabilities"
+---
+
+## Overview
+
+Tokenami includes common selectors like `hover`, `focus`, and `active` out of the box. However, you can define your own custom selectors to handle more complex styling scenarios like parent state, nested elements, and media query combinations.
+
+## Default Selectors
+
+Tokenami provides these selectors by default:
+
+```ts
+selectors: {
+  after: '&::after',
+  before: '&::before',
+  even: '&:nth-child(even)',
+  odd: '&:nth-child(odd)',
+  'first-child': '&:first-child',
+  'last-child': '&:last-child',
+  placeholder: '&::placeholder',
+  hover: '&:hover',
+  focus: '&:focus',
+  'focus-visible': '&:focus-visible',
+  'focus-within': '&:focus-within',
+  active: '&:active',
+  disabled: '&:disabled',
+}
+```
+
+## Configuring Custom Selectors
+
+Add custom selectors in your `tokenami.config.ts` file using the `selectors` key. Use the ampersand (`&`) to mark where the current element's selector should be injected:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  selectors: {
+    'parent-hover': '.parent:hover > &',
+    'data-active': '&[data-state="active"]',
+    'has-focus': '&:has(:focus)',
+  },
+});
+```
+
+## Nested Selectors
+
+Selectors can be nested using arrays to combine media queries or other conditional logic:
+
+```ts
+export default createConfig({
+  selectors: {
+    // Only apply hover on devices that support it
+    hover: ['@media (hover: hover) and (pointer: fine)', '&:hover'],
+  },
+});
+```
+
+## Usage Examples
+
+### Parent State
+
+Style an element based on its parent's state:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Card() {
+  return (
+    <div className="parent">
+      <img src="..." alt="" />
+      <button style={css({
+        '--parent-hover_color': 'var(--color_primary)',
+        '--parent-hover_transform': 'scale(1.05)',
+      })}>
+        Hover parent to see effect
+      </button>
+    </div>
+  );
+}
+```
+
+### Data Attributes
+
+Style elements based on data attributes:
+
+```tsx
+function Toggle() {
+  return (
+    <button 
+      data-state="active"
+      style={css({
+        '--background': 'var(--color_gray)',
+        '--data-active_background': 'var(--color_primary)',
+      })}
+    >
+      Toggle
+    </button>
+  );
+}
+```
+
+### Descendant Elements
+
+Style descendant elements using underscores for spaces:
+
+```tsx
+function Article() {
+  return (
+    <article style={css({
+      '--{&_p}_color': 'var(--color_text)',
+      '--{&_a}_color': 'var(--color_link)',
+      '--{&_a:hover}_text-decoration': 'underline',
+    })}>
+      <p>This is a paragraph with a <a href="#">link</a>.</p>
+    </article>
+  );
+}
+```
+
+<Note>
+Arbitrary selectors using `{&...}` syntax can only style the current element and its descendants. They cannot target parents or siblings.
+</Note>
+
+## Common Use Cases
+
+<AccordionGroup>
+  <Accordion title="Styling based on parent state">
+    ```ts
+    selectors: {
+      'parent-hover': '.parent:hover > &',
+      'parent-focus': '.parent:focus-within &',
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Complex pseudo-selectors">
+    ```ts
+    selectors: {
+      'not-first': '&:not(:first-child)',
+      'not-last': '&:not(:last-child)',
+      'empty': '&:empty',
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Advanced state selectors">
+    ```ts
+    selectors: {
+      'checked': '&:checked',
+      'indeterminate': '&:indeterminate',
+      'required': '&:required',
+      'invalid': '&:invalid',
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Responsive hover with media query">
+    ```ts
+    selectors: {
+      // Only apply hover styles on devices with hover capability
+      hover: ['@media (hover: hover) and (pointer: fine)', '&:hover'],
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Combining Selectors
+
+You can combine custom selectors with breakpoints:
+
+```tsx
+<button style={css({
+  '--color': 'var(--color_black)',
+  '--hover_color': 'var(--color_primary)',
+  '--md_hover_color': 'var(--color_secondary)', // Different color on medium screens
+})} />
+```
+
+## Best Practices
+
+<Check>Use semantic names that describe when the selector applies</Check>
+<Check>Keep selector specificity low for easier overrides</Check>
+<Check>Document complex selectors with comments in your config</Check>
+<Warning>Avoid overly specific selectors that couple styles to DOM structure</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Property Aliases" icon="link" href="/advanced/property-aliases">
+    Create shorthand names for CSS properties
+  </Card>
+  <Card title="Arbitrary Selectors" icon="brackets-curly" href="/concepts/selectors">
+    Learn about one-off arbitrary selectors
+  </Card>
+</CardGroup>

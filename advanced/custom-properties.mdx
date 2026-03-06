@@ -1,0 +1,312 @@
+---
+title: "Custom Properties"
+description: "Create custom CSS properties to extend your design system with advanced features"
+---
+
+## Overview
+
+Custom properties allow you to define your own CSS variables that aren't standard CSS properties. This enables advanced design system features like gradient systems, fluid typography, and compositional tokens that reference other theme values.
+
+<Info>
+Custom properties are different from CSS properties—they're variables you create specifically for your design system that can be used to configure other CSS properties.
+</Info>
+
+## Basic Usage
+
+Define custom properties in your config using the `customProperties` key:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      primary: '#0066cc',
+      secondary: '#6c757d',
+    },
+  },
+  customProperties: {
+    'gradient-from': ['color'],
+    'gradient-to': ['color'],
+  },
+});
+```
+
+Like regular properties, custom properties map to theme groups to control which tokens are valid.
+
+## Gradient System Example
+
+One common use case is creating a gradient system that references your color tokens:
+
+```ts
+export default createConfig({
+  theme: {
+    color: {
+      primary: '#0066cc',
+      secondary: '#6c757d',
+      accent: '#ff6b6b',
+    },
+    gradient: {
+      radial: 'radial-gradient(circle at top, var(--gradient-from), var(--gradient-to) 80%)',
+      linear: 'linear-gradient(to right, var(--gradient-from), var(--gradient-to))',
+      conic: 'conic-gradient(from 0deg, var(--gradient-from), var(--gradient-to))',
+    },
+  },
+  properties: {
+    'background-image': ['gradient'],
+  },
+  customProperties: {
+    'gradient-from': ['color'],
+    'gradient-to': ['color'],
+  },
+});
+```
+
+### Using the Gradient System
+
+```tsx
+import { css } from '@tokenami/css';
+
+function HeroSection() {
+  return (
+    <div style={css({
+      '--background-image': 'var(--gradient_radial)',
+      '--gradient-from': 'var(--color_primary)',
+      '--gradient-to': 'var(--color_secondary)',
+    })}>
+      <h1>Welcome</h1>
+    </div>
+  );
+}
+```
+
+The gradient tokens reference `--gradient-from` and `--gradient-to`, which you set using your color tokens. This keeps your gradient system consistent with your color palette.
+
+## Fluid Typography Example
+
+Custom properties are essential for fluid typography systems that scale between minimum and maximum values:
+
+```ts
+export default createConfig({
+  theme: {
+    'fluid-text-size': {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+    },
+    'font-size': {
+      // Use clamp() with custom properties for fluid sizing
+      xs: 'clamp(var(--fluid-text-size-min), 2vw, var(--fluid-text-size-max))',
+      sm: 'clamp(var(--fluid-text-size-min), 2.5vw, var(--fluid-text-size-max))',
+      base: 'clamp(var(--fluid-text-size-min), 3vw, var(--fluid-text-size-max))',
+    },
+  },
+  properties: {
+    'font-size': ['font-size'],
+  },
+  customProperties: {
+    'fluid-text-size-min': ['fluid-text-size'],
+    'fluid-text-size-max': ['fluid-text-size'],
+  },
+});
+```
+
+### Using Fluid Typography
+
+```tsx
+function Heading() {
+  return (
+    <h1 style={css({
+      '--font-size': 'var(--font-size_base)',
+      '--fluid-text-size-min': 'var(--fluid-text-size_sm)',
+      '--fluid-text-size-max': 'var(--fluid-text-size_xl)',
+    })}>
+      Responsive Heading
+    </h1>
+  );
+}
+```
+
+The text size fluidly scales between the minimum and maximum values based on viewport width.
+
+## Color Space System
+
+Advanced color manipulation using custom properties:
+
+```ts
+export default createConfig({
+  theme: {
+    'color-space': {
+      srgb: 'srgb',
+      'display-p3': 'display-p3',
+      'oklch': 'oklch',
+    },
+    color: {
+      // Colors that reference the color space
+      primary: 'color-mix(in var(--color-space), blue, white 20%)',
+      secondary: 'color-mix(in var(--color-space), red, white 20%)',
+    },
+  },
+  properties: {
+    'background-color': ['color'],
+    color: ['color'],
+  },
+  customProperties: {
+    'color-space': ['color-space'],
+  },
+});
+```
+
+## Real-World Example
+
+Here's how [@tokenami/ds](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) uses custom properties for fluid spacing:
+
+```ts
+export default createConfig({
+  theme: {
+    number: {
+      0: '0',
+      1: '1',
+      2: '2',
+      // ... more numbers
+    },
+    'fluid-width-clamp': {
+      // Fluid clamp that references min/max custom properties
+      fluid: 'clamp(calc(var(--fluid-width-min) * 1rem), calc(var(--fluid-width-slope) * 1vw + var(--fluid-width-base) * 1rem), calc(var(--fluid-width-max) * 1rem))',
+    },
+  },
+  properties: {
+    width: ['size', 'grid', 'fluid-width-clamp'],
+  },
+  customProperties: {
+    'fluid-width-min': ['number'],
+    'fluid-width-max': ['number'],
+    'fluid-width-slope': ['number'],
+    'fluid-width-base': ['number'],
+  },
+});
+```
+
+## Type Safety
+
+Custom properties get full TypeScript support:
+
+```tsx
+style={css({
+  '--gradient-from': 'var(--color_primary)',    // ✓ Autocomplete
+  '--gradient-to': 'var(--color_secondary)',     // ✓ Type-checked
+  '--gradient-from': 'var(--size_full)',         // ✗ Type error!
+})}
+```
+
+## Common Patterns
+
+<AccordionGroup>
+  <Accordion title="Animation timing system">
+    ```ts
+    customProperties: {
+      'animation-duration': ['time'],
+      'animation-delay': ['time'],
+    },
+    theme: {
+      time: {
+        fast: '150ms',
+        normal: '300ms',
+        slow: '500ms',
+      },
+      anim: {
+        fadeIn: 'fadeIn var(--animation-duration) var(--animation-delay)',
+      },
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Responsive container system">
+    ```ts
+    customProperties: {
+      'container-width': ['size'],
+      'container-padding': ['grid'],
+    },
+    theme: {
+      container: {
+        responsive: 'min(calc(100% - var(--container-padding) * 2), var(--container-width))',
+      },
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Shadow layer system">
+    ```ts
+    customProperties: {
+      'shadow-color': ['color'],
+      'shadow-opacity': ['alpha'],
+    },
+    theme: {
+      shadow: {
+        elevated: '0 10px 15px color-mix(in srgb, var(--shadow-color) var(--shadow-opacity), transparent)',
+      },
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Combining with Standard Properties
+
+Custom properties work alongside standard CSS properties:
+
+```tsx
+function Card() {
+  return (
+    <div style={css({
+      // Standard properties
+      '--padding': 4,
+      '--border-radius': 'var(--radii_md)',
+      
+      // Custom properties for gradient
+      '--background-image': 'var(--gradient_linear)',
+      '--gradient-from': 'var(--color_primary)',
+      '--gradient-to': 'var(--color_secondary)',
+      
+      // Custom properties for shadows
+      '--box-shadow': 'var(--shadow_elevated)',
+      '--shadow-color': 'var(--color_primary)',
+      '--shadow-opacity': '20%',
+    })}>
+      Card content
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+<Check>Use custom properties for compositional tokens that reference other values</Check>
+<Check>Name custom properties descriptively to indicate their purpose</Check>
+<Check>Map custom properties to appropriate theme groups for type safety</Check>
+<Check>Document complex custom property systems in your design system docs</Check>
+<Warning>Don't create custom properties for values that could be standard CSS properties</Warning>
+<Warning>Avoid circular references between custom properties and theme values</Warning>
+
+## Official Design System
+
+The [@tokenami/ds](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) package includes many custom properties for:
+
+- Fluid typography and spacing
+- Color space manipulation
+- Advanced shadow systems
+- Responsive containers
+
+Check the [design system source](https://github.com/tokenami/tokenami/blob/main/packages/ds/src/index.ts) for inspiration.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Theming Properties" icon="palette" href="/advanced/theming-properties">
+    Learn how to map properties to theme groups
+  </Card>
+  <Card title="Official Design System" icon="cube" href="/design-systems/official-system">
+    Explore pre-configured custom properties
+  </Card>
+</CardGroup>

@@ -1,0 +1,247 @@
+---
+title: 'Utility types'
+description: 'Type-safe variants, styles, and token values with TypeScript'
+icon: 'brackets-curly'
+---
+
+Tokenami provides several utility types to help you build type-safe components with full autocomplete support for your design tokens.
+
+## Variants
+
+The `Variants` type extracts the available variant options from a composed style, allowing you to extend your component props with type-safe variant selection.
+
+### Type signature
+
+```typescript
+type Variants<T> = T extends TokenamiComposeOutput<infer V> ? CSSVariants<V> : {};
+```
+
+### Usage
+
+Use `Variants` to type component props that accept variant options:
+
+```tsx
+import { css, type Variants } from '@tokenami/css';
+
+const button = css.compose({
+  '--background': 'var(--color_primary)',
+  '--color': 'var(--color_white)',
+  '--padding': 4,
+
+  variants: {
+    size: {
+      small: { '--padding': 2 },
+      large: { '--padding': 6 },
+    },
+    color: {
+      blue: { '--background-color': 'var(--color_blue)' },
+      green: { '--background-color': 'var(--color_green)' },
+    },
+  },
+});
+
+type ButtonElementProps = React.ComponentPropsWithoutRef<'button'>;
+interface ButtonProps extends ButtonElementProps, Variants<typeof button> {}
+
+function Button({ size, color, ...props }: ButtonProps) {
+  const [cn, css] = button({ size, color });
+  return <button {...props} className={cn(props.className)} style={css(props.style)} />;
+}
+```
+
+Now TypeScript will enforce valid variant values:
+
+```tsx
+// ✅ Valid
+<Button size="small" color="blue" />
+
+// ❌ TypeScript error - invalid size
+<Button size="tiny" color="blue" />
+```
+
+## TokenamiStyle
+
+The `TokenamiStyle` type extends a component's props to accept Tokenami properties in the `style` prop. This enables consumers to pass Tokenami CSS variables with full type checking and autocomplete.
+
+### Type signature
+
+```typescript
+type TokenamiStyle<P> = P & { style?: TokenamiProperties | TokenamiCSS };
+```
+
+### Usage
+
+Use `TokenamiStyle` to make your components accept Tokenami properties:
+
+```tsx
+import { type TokenamiStyle, css } from '@tokenami/css';
+
+interface ButtonProps extends TokenamiStyle<React.ComponentProps<'button'>> {
+  variant?: 'primary' | 'secondary';
+}
+
+function Button({ variant = 'primary', ...props }: ButtonProps) {
+  return (
+    <button
+      {...props}
+      style={css(
+        {
+          '--background': 'var(--color_primary)',
+          '--padding': 4,
+        },
+        variant === 'secondary' && {
+          '--background': 'var(--color_secondary)',
+        },
+        props.style
+      )}
+    />
+  );
+}
+```
+
+Now you can pass Tokenami properties with full type safety:
+
+```tsx
+// ✅ TypeScript provides autocomplete for Tokenami properties
+<Button style={{ '--padding': 6, '--color': 'var(--color_white)' }} />
+
+// ✅ Type checking ensures valid token values
+<Button style={{ '--background': 'var(--color_primary)' }} />
+```
+
+## TokenValue
+
+The `TokenValue` type generates a union of CSS variable tokens for a specific theme key. Use it when you need to reference theme tokens in your TypeScript code.
+
+### Type signature
+
+```typescript
+type TokenValue<ThemeKey extends string> =
+  | TokensByThemeKey[ThemeKey]
+  | (ThemeKey extends 'grid' | 'number' ? Tokenami.GridValue : never);
+```
+
+### Usage
+
+Given this theme configuration:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      'slate-100': '#f1f5f9',
+      'slate-700': '#334155',
+      'sky-500': '#0ea5e9',
+    },
+    radii: {
+      rounded: '10px',
+      circle: '9999px',
+      none: 'none',
+    },
+  },
+});
+```
+
+You can extract specific token types:
+
+```ts
+import { type TokenValue } from '@tokenami/css';
+
+type Color = TokenValue<'color'>;
+// Result: 'var(--color_slate-100)' | 'var(--color_slate-700)' | 'var(--color_sky-500)'
+
+type Radii = TokenValue<'radii'>;
+// Result: 'var(--radii_rounded)' | 'var(--radii_circle)' | 'var(--radii_none)'
+```
+
+This is useful for creating typed component APIs that accept specific tokens:
+
+```tsx
+interface CardProps {
+  borderColor?: TokenValue<'color'>;
+  borderRadius?: TokenValue<'radii'>;
+}
+
+function Card({ borderColor, borderRadius, children }: CardProps) {
+  return (
+    <div
+      style={css({
+        '--border-color': borderColor ?? 'var(--color_slate-100)',
+        '--border-radius': borderRadius ?? 'var(--radii_rounded)',
+        '--border-width': 1,
+      })}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Usage with type safety
+<Card
+  borderColor="var(--color_sky-500)"
+  borderRadius="var(--radii_circle)"
+>
+  Content
+</Card>
+```
+
+<Note>
+  For grid values, `TokenValue` also accepts numbers since Tokenami multiplies numeric values by your grid size.
+</Note>
+
+## Best practices
+
+### Combine utility types
+
+You can combine multiple utility types for comprehensive type safety:
+
+```tsx
+import { type TokenamiStyle, type Variants, css } from '@tokenami/css';
+
+const card = css.compose({
+  '--padding': 4,
+  '--border-radius': 'var(--radii_rounded)',
+
+  variants: {
+    elevation: {
+      flat: { '--box-shadow': 'none' },
+      raised: { '--box-shadow': 'var(--shadow_md)' },
+    },
+  },
+});
+
+interface CardProps
+  extends TokenamiStyle<React.ComponentProps<'div'>>,
+    Variants<typeof card> {
+  children: React.ReactNode;
+}
+
+function Card({ elevation, children, ...props }: CardProps) {
+  const [cn, style] = card({ elevation });
+  return (
+    <div {...props} className={cn(props.className)} style={style(props.style)}>
+      {children}
+    </div>
+  );
+}
+```
+
+### Type custom hook returns
+
+Use utility types when building custom styling hooks:
+
+```tsx
+import { type TokenamiCSS } from '@tokenami/css';
+
+function useButtonStyles(variant: 'primary' | 'secondary'): TokenamiCSS {
+  return css({
+    '--background': variant === 'primary' 
+      ? 'var(--color_primary)' 
+      : 'var(--color_secondary)',
+    '--color': 'var(--color_white)',
+    '--padding': 4,
+  });
+}
+```

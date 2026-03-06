@@ -1,0 +1,184 @@
+---
+title: CSS Compose
+description: Extract reusable styles into CSS classes to keep markup clean and DRY
+---
+
+The `css.compose` API helps you build reusable components by extracting styles into your stylesheet. Styles in the compose block are replaced with a class name, reducing repetition in your markup.
+
+## Basic Usage
+
+Define a composed style and destructure the returned function to get `cn` (className) and `css` (style) functions:
+
+```tsx
+import { css } from '@tokenami/css';
+
+const button = css.compose({
+  '--background': 'var(--color_primary)',
+  '--hover_background': 'var(--color_primary-dark)',
+});
+
+function Button(props) {
+  const [cn, css] = button();
+  return (
+    <button 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)} 
+    />
+  );
+}
+```
+
+### Generated Output
+
+The composed styles are extracted into your CSS file with a generated class name:
+
+```html
+<button class="tk-abc">Click me</button>
+```
+
+## Return Value
+
+Calling `css.compose()` returns a generator function. When you call this generator, it returns a tuple:
+
+```tsx
+const [cn, style] = button();
+```
+
+<ParamField path="cn" type="(...classNames: ClassName[]) => string">
+  A function that combines the generated class name with any additional class names you pass. Filters out falsy values automatically.
+  
+  ```tsx
+  // Combine with other classes
+  const className = cn('custom-class', props.className);
+  
+  // Conditional classes
+  const className = cn(isActive && 'active', props.className);
+  ```
+</ParamField>
+
+<ParamField path="style" type="(...overrides: TokenamiOverride[]) => TokenamiCSS">
+  A function that accepts override styles, similar to the `css` utility. Use it to apply inline overrides or pass through props.
+  
+  ```tsx
+  // Apply overrides
+  const style = css(props.style);
+  
+  // With conditional overrides
+  const disabled = props.disabled && { '--opacity': 0.5 };
+  const style = css(disabled, props.style);
+  ```
+</ParamField>
+
+## Real-World Example
+
+Here's a complete button component from the Tokenami examples:
+
+```tsx
+import { type Variants, type TokenamiStyle, css } from '@tokenami/css';
+
+interface ButtonProps
+  extends TokenamiStyle<React.ComponentProps<'button'>>,
+    Variants<typeof button> {}
+
+const Button = (props: ButtonProps) => {
+  const [cn, css] = button();
+  return (
+    <button 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)} 
+    />
+  );
+};
+
+const button = css.compose({
+  '--white-space': 'nowrap',
+  '--display': 'flex',
+  '--align-items': 'center',
+  '--justify-content': 'center',
+  '--gap': 0.5,
+  '--py': 1,
+  '--px': 3,
+  '--border-radius': 'var(--radii_full)',
+  '--background-color': 'var(--color_gray5)',
+  '--color': 'var(--color_gray12)',
+  '--transition': 'var(--morph_colors)',
+  '--hover_background-color': 'var(--color_gray6)',
+  '--hover_color': 'var(--color_gray12)',
+  '--font': 'var(--text_sm)',
+});
+
+export { Button };
+```
+
+## Input Parameters
+
+The `css.compose()` function accepts a configuration object:
+
+<ParamField path="...styles" type="TokenamiProperties">
+  Base styles that will be extracted into the CSS file. These properties follow the same syntax as the `css` utility.
+  
+  ```tsx
+  const card = css.compose({
+    '--border-radius': 'var(--radii_rounded)',
+    '--color': 'var(--color_white)',
+    '--font-size': 'var(--text-size_sm)',
+  });
+  ```
+</ParamField>
+
+<ParamField path="variants" type="VariantsConfig">
+  Define different style variations. See [Variants](/styling/variants) for details.
+</ParamField>
+
+<ParamField path="includes" type="Array<TokenamiComposeOutput | TokenamiCSS>">
+  Extend styles from other composed styles or css utilities. See [Extending Styles](/styling/extending-styles) for details.
+</ParamField>
+
+## Performance Benefits
+
+Using `css.compose` provides several performance and developer experience benefits:
+
+### Reduced Markup Size
+
+Instead of repeating inline styles on every element:
+
+```html
+<!-- Without compose: repeated inline styles -->
+<button style="--display: flex; --align-items: center; --gap: 0.5; --py: 1; --px: 3; --border-radius: var(--radii_full); --background-color: var(--color_gray5);">One</button>
+<button style="--display: flex; --align-items: center; --gap: 0.5; --py: 1; --px: 3; --border-radius: var(--radii_full); --background-color: var(--color_gray5);">Two</button>
+<button style="--display: flex; --align-items: center; --gap: 0.5; --py: 1; --px: 3; --border-radius: var(--radii_full); --background-color: var(--color_gray5);">Three</button>
+```
+
+You get a single class name:
+
+```html
+<!-- With compose: single class name -->
+<button class="tk-abc">One</button>
+<button class="tk-abc">Two</button>
+<button class="tk-abc">Three</button>
+```
+
+### Cleaner Components
+
+Extract style definitions to keep your component logic clean and maintainable. Styles are defined once and reused across all instances.
+
+### Caching
+
+Tokenami caches composed styles using an LRU cache, so repeated calls with the same configuration are instant.
+
+## When to Use Compose vs CSS Utility
+
+Use `css.compose` when:
+
+- Building reusable components with consistent styles
+- You have many instances of the same component
+- You want cleaner markup
+- You need variants (see next section)
+
+Use the `css` utility when:
+
+- Prototyping or one-off styles
+- Styles are highly dynamic and change frequently
+- Building utility components that are heavily customized by consumers

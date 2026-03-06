@@ -1,0 +1,312 @@
+---
+title: "Theming Properties"
+description: "Control which theme tokens are available for each CSS property"
+---
+
+## Overview
+
+Tokenami's `properties` configuration maps CSS properties to theme groups, controlling which design tokens are valid for each property. This ensures type safety and helps maintain design system consistency by restricting properties to their relevant tokens.
+
+## Default Property Mappings
+
+Tokenami includes sensible defaults that map CSS properties to common theme groups. For example:
+
+- Color-related properties (`color`, `background-color`, `border-color`) map to the `color` theme
+- Spacing properties (`padding`, `margin`, `gap`) map to the `grid` system
+- Border radius properties map to the `radii` theme
+- Font properties map to `font`, `font-size`, and `weight` themes
+
+<Accordion title="View default mappings">
+```ts
+properties: {
+  'accent-color': ['color'],
+  'background-color': ['color'],
+  'border-color': ['color'],
+  'border-radius': ['radii'],
+  color: ['color'],
+  'font-family': ['font'],
+  'font-size': ['font-size'],
+  'font-weight': ['weight'],
+  gap: ['grid'],
+  height: ['grid', 'size'],
+  margin: ['grid'],
+  padding: ['grid'],
+  width: ['grid', 'size'],
+  // ... and many more
+}
+```
+</Accordion>
+
+## Custom Property Mappings
+
+You can customize which theme groups are available for any CSS property:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      primary: '#0066cc',
+      secondary: '#6c757d',
+    },
+    container: {
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+    },
+    spacing: {
+      tight: '0.5rem',
+      normal: '1rem',
+      loose: '2rem',
+    },
+  },
+  properties: {
+    'max-width': ['container'],
+    gap: ['spacing', 'grid'],
+  },
+});
+```
+
+## Usage Example
+
+With the configuration above:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Container() {
+  return (
+    <div style={css({
+      '--max-width': 'var(--container_lg)',    // ✓ Valid
+      '--gap': 'var(--spacing_normal)',         // ✓ Valid
+      '--gap': 2,                                // ✓ Valid (grid value)
+      '--max-width': 'var(--color_primary)',    // ✗ Type error!
+    })}>
+      Content
+    </div>
+  );
+}
+```
+
+## Multiple Theme Groups
+
+Properties can accept tokens from multiple theme groups:
+
+```ts
+export default createConfig({
+  theme: {
+    size: {
+      full: '100%',
+      half: '50%',
+    },
+  },
+  properties: {
+    // Width accepts both grid values and size tokens
+    width: ['grid', 'size'],
+    height: ['grid', 'size'],
+  },
+});
+```
+
+```tsx
+// All of these are valid:
+<div style={css({
+  '--width': 10,                    // Grid value: 2.5rem
+  '--width': 'var(--size_full)',    // Size token: 100%
+  '--height': 'var(--size_half)',   // Size token: 50%
+})} />
+```
+
+## Grid Integration
+
+The special `'grid'` value in property mappings allows numeric values that multiply by your grid size:
+
+```ts
+export default createConfig({
+  grid: '0.25rem',  // Base grid unit
+  properties: {
+    padding: ['grid'],
+  },
+});
+
+// Usage
+<div style={css({
+  '--padding': 4,  // Becomes 1rem (4 × 0.25rem)
+})} />
+```
+
+## Real-World Example
+
+Here's a practical configuration for a design system:
+
+```ts
+export default createConfig({
+  grid: '0.25rem',
+  theme: {
+    color: {
+      primary: '#0066cc',
+      text: '#1a1a1a',
+      border: '#e5e5e5',
+    },
+    radii: {
+      sm: '0.25rem',
+      md: '0.5rem',
+      lg: '1rem',
+      full: '9999px',
+    },
+    shadow: {
+      sm: '0 1px 2px rgba(0,0,0,0.05)',
+      md: '0 4px 6px rgba(0,0,0,0.1)',
+      lg: '0 10px 15px rgba(0,0,0,0.1)',
+    },
+    font: {
+      sans: 'system-ui, sans-serif',
+      mono: 'monospace',
+    },
+  },
+  properties: {
+    // Color properties
+    'background-color': ['color'],
+    'border-color': ['color'],
+    color: ['color'],
+    
+    // Border radius
+    'border-radius': ['radii'],
+    
+    // Shadows
+    'box-shadow': ['shadow'],
+    
+    // Typography
+    'font-family': ['font'],
+    
+    // Spacing (grid-based)
+    padding: ['grid'],
+    margin: ['grid'],
+    gap: ['grid'],
+  },
+});
+```
+
+## Type Safety Benefits
+
+Property mappings provide several type safety benefits:
+
+<AccordionGroup>
+  <Accordion title="Autocomplete for valid tokens">
+    Your editor will only suggest tokens from the configured theme groups:
+    ```tsx
+    '--border-radius': 'var(--radii_'  // Shows: sm, md, lg, full
+    ```
+  </Accordion>
+
+  <Accordion title="Catch invalid token usage">
+    TypeScript will error if you use tokens from the wrong theme group:
+    ```tsx
+    '--border-radius': 'var(--color_primary)'  // ✗ Type error
+    ```
+  </Accordion>
+
+  <Accordion title="Detect removed tokens">
+    If you remove a token from your theme, TypeScript shows errors everywhere it's used:
+    ```ts
+    // Remove 'rounded' from radii theme
+    '--border-radius': 'var(--radii_rounded)'  // ✗ Type error
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Common Patterns
+
+<AccordionGroup>
+  <Accordion title="Container width system">
+    ```ts
+    theme: {
+      container: {
+        xs: '20rem',
+        sm: '24rem',
+        md: '28rem',
+        lg: '32rem',
+        xl: '36rem',
+      },
+    },
+    properties: {
+      'max-width': ['container', 'size'],
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Semantic color system">
+    ```ts
+    theme: {
+      color: {
+        background: '#ffffff',
+        foreground: '#000000',
+        primary: '#0066cc',
+        secondary: '#6c757d',
+        success: '#28a745',
+        danger: '#dc3545',
+      },
+    },
+    properties: {
+      'background-color': ['color'],
+      'border-color': ['color'],
+      color: ['color'],
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Gradient system">
+    ```ts
+    theme: {
+      gradient: {
+        primary: 'linear-gradient(to right, #0066cc, #00aaff)',
+        secondary: 'linear-gradient(to bottom, #6c757d, #495057)',
+      },
+    },
+    properties: {
+      'background-image': ['gradient'],
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Extending Default Properties
+
+When you define properties in your config, you override the defaults. To extend instead of replace, spread the default config:
+
+```ts
+import { createConfig } from '@tokenami/css';
+import defaultConfig from '@tokenami/css/config';
+
+export default createConfig({
+  properties: {
+    ...defaultConfig.properties,
+    // Your custom additions
+    'max-width': ['container'],
+  },
+});
+```
+
+<Note>
+In most cases, you don't need to extend defaults. Only do this if you want to preserve all default mappings while adding new ones.
+</Note>
+
+## Best Practices
+
+<Check>Group related tokens in semantic theme groups</Check>
+<Check>Use descriptive theme group names (e.g., `container` instead of `sizes`)</Check>
+<Check>Allow multiple theme groups when it makes sense (e.g., `width: ['grid', 'size']`)</Check>
+<Warning>Don't create overly restrictive mappings that limit flexibility</Warning>
+<Warning>Avoid mapping unrelated properties to the same theme group</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Properties" icon="wand-magic-sparkles" href="/advanced/custom-properties">
+    Create custom CSS properties for advanced features
+  </Card>
+  <Card title="Theming" icon="palette" href="/concepts/theming">
+    Learn about theme configuration
+  </Card>
+</CardGroup>

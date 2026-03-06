@@ -1,0 +1,303 @@
+---
+title: css.compose
+description: Create reusable component styles with variants
+---
+
+The `css.compose` method creates reusable component styles with type-safe variants. It returns a function that generates optimized className and style utilities.
+
+## Import
+
+```typescript
+import { css } from '@tokenami/css';
+```
+
+## Signature
+
+```typescript
+function css.compose<T>(config: TokenamiComposeInput<T>): TokenamiComposeOutput<T>
+```
+
+<ParamField path="config" type="TokenamiComposeInput<T>" required>
+  Configuration object defining base styles, variants, and includes.
+
+  <Expandable title="properties">
+    <ResponseField name="...baseStyles" type="TokenamiProperties">
+      Base token properties applied to all instances. Spread directly into the config object.
+    </ResponseField>
+
+    <ResponseField name="variants" type="VariantsConfig<T>">
+      Object mapping variant names to their possible values and corresponding styles.
+    </ResponseField>
+
+    <ResponseField name="includes" type="Array<TokenamiComposeOutput | TokenamiCSS>">
+      Array of other composed styles or css utilities to include.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="TokenamiComposeOutput<T>" type="function">
+  A generator function that accepts variant selections and returns `[cn, style]` utilities.
+
+  <Expandable title="signature">
+    ```typescript
+    (selectedVariants?: Variants<T>) => [
+      cn: (...classNames: ClassName[]) => string,
+      style: (...overrides: TokenamiOverride[]) => TokenamiCSS
+    ]
+    ```
+
+    <ResponseField name="cn" type="function">
+      Merges the generated className with additional classNames.
+    </ResponseField>
+
+    <ResponseField name="style" type="function">
+      Returns a TokenamiCSS object, accepting style overrides.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Usage
+
+### Basic Component Styles
+
+Define reusable component styles with a static className:
+
+```tsx
+import { css } from '@tokenami/css';
+
+const button = css.compose({
+  '--padding': 'var(--space_3)',
+  '--border-radius': 'var(--radius_md)',
+  '--font-weight': 'var(--font-weight_semibold)'
+});
+
+function Button() {
+  const [cn, style] = button();
+  
+  return (
+    <button className={cn()} style={style()}>
+      Click me
+    </button>
+  );
+}
+```
+
+### With Variants
+
+Define type-safe variants for different component states:
+
+```tsx
+const button = css.compose({
+  '--padding': 'var(--space_3)',
+  '--border-radius': 'var(--radius_md)',
+  
+  variants: {
+    variant: {
+      primary: {
+        '--background-color': 'var(--color_primary)',
+        '--color': 'var(--color_white)'
+      },
+      secondary: {
+        '--background-color': 'var(--color_gray-200)',
+        '--color': 'var(--color_gray-900)'
+      }
+    },
+    size: {
+      sm: { '--padding': 'var(--space_2)' },
+      md: { '--padding': 'var(--space_3)' },
+      lg: { '--padding': 'var(--space_4)' }
+    }
+  }
+});
+
+function Button({ variant = 'primary', size = 'md' }) {
+  const [cn, style] = button({ variant, size });
+  
+  return (
+    <button className={cn()} style={style()}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Boolean Variants
+
+Use string literals `'true'` and `'false'` for boolean-like variants:
+
+```tsx
+const button = css.compose({
+  '--opacity': '1',
+  
+  variants: {
+    disabled: {
+      true: {
+        '--opacity': '0.5',
+        '--cursor': 'not-allowed'
+      },
+      false: {
+        '--cursor': 'pointer'
+      }
+    }
+  }
+});
+
+function Button({ disabled }: { disabled?: boolean }) {
+  const [cn, style] = button({ disabled });
+  
+  return (
+    <button className={cn()} style={style()}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Numeric Variants
+
+Variant keys can be numeric (automatically typed as numbers):
+
+```tsx
+const icon = css.compose({
+  '--size': 4,
+  
+  variants: {
+    size: {
+      16: { '--size': 2 },
+      24: { '--size': 3 },
+      32: { '--size': 4 }
+    }
+  }
+});
+
+function Icon({ size = 24 }: { size?: 16 | 24 | 32 }) {
+  const [cn, style] = icon({ size });
+  
+  return <div className={cn()} style={style()} />;
+}
+```
+
+### Style Overrides
+
+Override composed styles at the call site:
+
+```tsx
+const button = css.compose({
+  '--padding': 'var(--space_3)',
+  '--background-color': 'var(--color_primary)'
+});
+
+function Button({ customColor }) {
+  const [cn, style] = button();
+  
+  return (
+    <button 
+      className={cn()} 
+      style={style({ '--background-color': customColor })}
+    >
+      Click me
+    </button>
+  );
+}
+```
+
+### Composing Multiple Styles
+
+Combine multiple composed styles using `includes`:
+
+```tsx
+const focusRing = css.compose({
+  '--outline': '2px solid var(--color_primary)',
+  '--outline-offset': '2px'
+});
+
+const button = css.compose({
+  includes: [focusRing],
+  '--padding': 'var(--space_3)',
+  '--background-color': 'var(--color_primary)'
+});
+
+function Button() {
+  const [cn, style] = button();
+  
+  return (
+    <button className={cn()} style={style()}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Chaining ClassNames
+
+Add additional classNames to the generated one:
+
+```tsx
+function Button({ className }) {
+  const [cn, style] = button();
+  
+  return (
+    <button className={cn(className, 'extra-class')} style={style()}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Responsive Variants
+
+Combine with responsive modifiers from your config:
+
+```tsx
+const button = css.compose({
+  '--padding': 'var(--space_2)',
+  '--md_padding': 'var(--space_4)', // Applies at md breakpoint
+  
+  variants: {
+    size: {
+      sm: { 
+        '--padding': 'var(--space_1)',
+        '--md_padding': 'var(--space_2)'
+      },
+      lg: { 
+        '--padding': 'var(--space_4)',
+        '--md_padding': 'var(--space_6)'
+      }
+    }
+  }
+});
+```
+
+## Performance
+
+- **Static ClassName**: Base styles generate a stable className (e.g., `tk-abc123`)
+- **Caching**: Results are cached based on variant selections
+- **Optimized Merging**: Only outputs styles that differ from base styles
+- **Tree Shaking**: Unused variants can be tree-shaken in production builds
+
+## Type Safety
+
+The `compose` method provides full type safety:
+
+```typescript
+const button = css.compose({
+  variants: {
+    variant: {
+      primary: { /* ... */ },
+      secondary: { /* ... */ }
+    }
+  }
+});
+
+// ✅ Type-safe
+button({ variant: 'primary' });
+
+// ❌ TypeScript error
+button({ variant: 'tertiary' });
+```
+
+## Related
+
+- [css](/api/css) - Apply and merge Tokenami styles
+- [TokenamiStyle](/api/types/tokenami-style) - Type helper for component props
+- [Variants](/api/types/variants) - Extract variant types from composed styles

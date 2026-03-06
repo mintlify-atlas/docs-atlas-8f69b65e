@@ -1,122 +1,128 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Tokenami",
+  "theme": "willow",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#242b2c",
+    "light": "#040404",
+    "dark": "#6a6a6d"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/f42fd966-7771-416e-8095-3cce5c22e684.png",
+  "logo": {
+    "light": "https://media.brand.dev/7741bb34-9a0c-485f-8005-85eaa9e450e6.svg",
+    "dark": "https://media.brand.dev/7741bb34-9a0c-485f-8005-85eaa9e450e6.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/tokenami/tokenami"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/tokenami/tokenami",
+      "discord": "https://discord.gg/CAU4HNR4XK"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
+            "pages": ["introduction", "installation", "quickstart"]
+          },
+          {
+            "group": "Core Concepts",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "concepts/theming",
+              "concepts/grid-values",
+              "concepts/selectors",
+              "concepts/arbitrary-values"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Styling",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "styling/css-utility",
+              "styling/css-compose",
+              "styling/variants",
+              "styling/extending-styles"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Design Systems",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "design-systems/official-system",
+              "design-systems/building-your-own",
+              "design-systems/global-styles",
+              "design-systems/breakpoints",
+              "design-systems/animation"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Advanced",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "advanced/custom-selectors",
+              "advanced/property-aliases",
+              "advanced/theming-properties",
+              "advanced/custom-properties"
+            ]
+          },
+          {
+            "group": "TypeScript",
+            "pages": [
+              "typescript/utility-types",
+              "typescript/ci-setup"
+            ]
+          },
+          {
+            "group": "Troubleshooting",
+            "pages": [
+              "troubleshooting/editor-setup",
+              "troubleshooting/browser-support",
+              "troubleshooting/library-support"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "CSS Utilities",
             "pages": [
-              "api-reference/introduction"
+              "api/css",
+              "api/css-compose",
+              "api/create-css"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Configuration",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/create-config",
+              "api/config-options"
+            ]
+          },
+          {
+            "group": "Types",
+            "pages": [
+              "api/types/tokenami-style",
+              "api/types/variants",
+              "api/types/token-value"
+            ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "api/cli/commands",
+              "api/cli/init",
+              "api/cli/check"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

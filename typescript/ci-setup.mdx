@@ -1,0 +1,291 @@
+---
+title: 'CI setup'
+description: 'Type checking Tokenami properties in continuous integration'
+icon: 'circle-check'
+---
+
+Tokenami uses widened types during development for better IDE performance. However, this means running `tsc` directly won't catch Tokenami-specific type errors. This guide explains how to set up proper type checking in your CI pipeline.
+
+## Why widened types?
+
+During development, Tokenami widens property types to improve IntelliSense performance in your editor. Instead of checking against thousands of possible token combinations on every keystroke, the TypeScript plugin provides interactive validation as you type.
+
+This approach gives you:
+
+- **Fast autocomplete** — Suggestions appear instantly as you type
+- **Real-time validation** — The TypeScript plugin catches errors immediately
+- **Better developer experience** — No lag when editing large files
+
+However, when you run `tsc --noEmit` in the command line, TypeScript skips the plugin validation and only checks the widened types. This means Tokenami type errors won't be caught.
+
+## The solution: tokenami check
+
+To ensure type safety in CI, use the `tokenami check` command. This command validates all Tokenami properties in your codebase against your theme configuration.
+
+### Basic setup
+
+Add both commands to your type checking script:
+
+```json package.json
+{
+  "scripts": {
+    "typecheck": "tokenami check && tsc --noEmit"
+  }
+}
+```
+
+The semicolon (`;`) ensures both commands run, but `tokenami check` must pass first. If it fails, the script exits before running `tsc`.
+
+### CI configuration examples
+
+<AccordionGroup>
+  <Accordion title="GitHub Actions">
+    ```yaml .github/workflows/ci.yml
+    name: CI
+
+    on: [push, pull_request]
+
+    jobs:
+      typecheck:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v3
+          
+          - name: Setup Node.js
+            uses: actions/setup-node@v3
+            with:
+              node-version: 18
+              
+          - name: Install dependencies
+            run: npm ci
+            
+          - name: Type check
+            run: npm run typecheck
+    ```
+  </Accordion>
+
+  <Accordion title="GitLab CI">
+    ```yaml .gitlab-ci.yml
+    typecheck:
+      image: node:18
+      script:
+        - npm ci
+        - npm run typecheck
+      only:
+        - merge_requests
+        - main
+    ```
+  </Accordion>
+
+  <Accordion title="CircleCI">
+    ```yaml .circleci/config.yml
+    version: 2.1
+
+    jobs:
+      typecheck:
+        docker:
+          - image: cimg/node:18.0
+        steps:
+          - checkout
+          - run: npm ci
+          - run: npm run typecheck
+
+    workflows:
+      main:
+        jobs:
+          - typecheck
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## What tokenami check validates
+
+The `tokenami check` command validates:
+
+<AccordionGroup>
+  <Accordion title="Theme token references" icon="palette">
+    Ensures all CSS variable references exist in your theme:
+
+    ```tsx
+    // ✅ Valid - token exists in theme
+    css({ '--color': 'var(--color_primary)' })
+
+    // ❌ Error - token doesn't exist
+    css({ '--color': 'var(--color_nonexistent)' })
+    ```
+  </Accordion>
+
+  <Accordion title="Property-theme mappings" icon="link">
+    Validates that properties only use tokens from their configured theme keys:
+
+    ```tsx
+    // ✅ Valid - color property accepts color tokens
+    css({ '--background': 'var(--color_blue)' })
+
+    // ❌ Error - color property can't use spacing tokens
+    css({ '--background': 'var(--spacing_lg)' })
+    ```
+  </Accordion>
+
+  <Accordion title="Arbitrary values" icon="brackets-curly">
+    Checks that arbitrary values use the correct syntax:
+
+    ```tsx
+    // ✅ Valid - proper arbitrary value syntax
+    css({ '--padding': 'var(---, 20px)' })
+
+    // ❌ Error - missing triple dash syntax
+    css({ '--padding': '20px' })
+    ```
+  </Accordion>
+
+  <Accordion title="Selector configurations" icon="hand-pointer">
+    Verifies custom selectors are defined in your config:
+
+    ```tsx
+    // ✅ Valid - hover selector is configured
+    css({ '--hover_color': 'var(--color_primary)' })
+
+    // ❌ Error - unknown selector
+    css({ '--invalid_color': 'var(--color_primary)' })
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Common CI issues
+
+### Config file not found
+
+If `tokenami check` can't find your config file, specify the path:
+
+```bash
+tokenami check --config ./path/to/tokenami.config.ts
+```
+
+### TypeScript version mismatch
+
+Ensure your CI environment uses the same TypeScript version as your local environment:
+
+```json package.json
+{
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+<Tip>
+  Pin your TypeScript version (remove the `^`) to avoid unexpected behavior from minor version updates.
+</Tip>
+
+### Build order issues
+
+If you generate types during the build process, ensure they're created before type checking:
+
+```json package.json
+{
+  "scripts": {
+    "build": "tokenami --output ./public/styles.css",
+    "typecheck": "npm run build && tokenami check && tsc --noEmit"
+  }
+}
+```
+
+## Performance optimization
+
+For large codebases, you can optimize CI performance:
+
+### Check only changed files
+
+Use a tool like `lint-staged` to check only modified files:
+
+```json package.json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "tokenami check --files",
+      "tsc-files --noEmit"
+    ]
+  }
+}
+```
+
+### Parallel execution
+
+If your CI supports it, run checks in parallel:
+
+```json package.json
+{
+  "scripts": {
+    "typecheck:tokenami": "tokenami check",
+    "typecheck:tsc": "tsc --noEmit",
+    "typecheck": "npm-run-all --parallel typecheck:*"
+  }
+}
+```
+
+<Note>
+  Make sure to install `npm-run-all` as a dev dependency: `npm install -D npm-run-all`
+</Note>
+
+## Local development workflow
+
+While `tokenami check` is essential for CI, you don't need to run it constantly during development. The TypeScript plugin provides real-time feedback in your editor.
+
+However, it's useful to run before committing:
+
+```json package.json
+{
+  "scripts": {
+    "precommit": "tokenami check && tsc --noEmit"
+  }
+}
+```
+
+You can automate this with a tool like [husky](https://typicode.github.io/husky/):
+
+```bash
+# Install husky
+npm install -D husky
+
+# Add pre-commit hook
+npx husky add .husky/pre-commit "npm run precommit"
+```
+
+## Troubleshooting
+
+### False positives
+
+If `tokenami check` reports errors that don't appear in your editor:
+
+1. Restart your TypeScript server in your editor
+2. Ensure your editor is using the workspace TypeScript version
+3. Check that your config file matches between local and CI
+
+### Slow CI builds
+
+If type checking is slowing down your CI:
+
+1. Use caching for `node_modules` and generated types
+2. Split type checking into a separate job that runs in parallel
+3. Consider incremental type checking for monorepos
+
+### Editor vs CI mismatch
+
+If your editor shows different errors than CI:
+
+1. Verify both use the same TypeScript version
+2. Check that your `tsconfig.json` is correctly configured
+3. Ensure the TypeScript plugin is enabled in your `tsconfig.json`:
+
+```json tsconfig.json
+{
+  "compilerOptions": {
+    "plugins": [{ "name": "tokenami" }]
+  }
+}
+```
+
+<Warning>
+  Don't skip `tokenami check` in CI. Widened types won't catch Tokenami-specific errors, which can lead to runtime issues with missing tokens.
+</Warning>

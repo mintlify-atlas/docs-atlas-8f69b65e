@@ -1,0 +1,291 @@
+---
+title: TokenamiStyle
+description: Type helper for accepting styles in component props
+---
+
+The `TokenamiStyle` type helper allows components to accept both regular props and an optional `style` prop containing Tokenami styles.
+
+## Import
+
+```typescript
+import type { TokenamiStyle } from '@tokenami/css';
+```
+
+## Signature
+
+```typescript
+type TokenamiStyle<P> = P & { 
+  style?: TokenamiProperties | TokenamiCSS 
+}
+```
+
+<ParamField path="P" type="object">
+  Your component's base props type.
+</ParamField>
+
+<ResponseField name="TokenamiStyle<P>" type="type">
+  Extended props type that includes an optional `style` prop accepting `TokenamiProperties` or `TokenamiCSS`.
+</ResponseField>
+
+## Usage
+
+### Basic Component Props
+
+Define component props that accept Tokenami styles:
+
+```typescript
+import type { TokenamiStyle } from '@tokenami/css';
+
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary';
+}
+
+function Button(props: TokenamiStyle<ButtonProps>) {
+  const { children, onClick, variant, style } = props;
+  
+  return (
+    <button onClick={onClick} style={style}>
+      {children}
+    </button>
+  );
+}
+
+// Usage
+<Button 
+  variant="primary"
+  style={{
+    '--padding': 'var(--space_4)',
+    '--background-color': 'var(--color_primary)'
+  }}
+>
+  Click me
+</Button>
+```
+
+### With Default Styles
+
+Combine default component styles with user-provided overrides:
+
+```typescript
+import { css } from '@tokenami/css';
+import type { TokenamiStyle } from '@tokenami/css';
+
+const defaultButtonStyles = {
+  '--padding': 'var(--space_3)',
+  '--border-radius': 'var(--radius_md)',
+  '--font-weight': '600'
+};
+
+interface ButtonProps {
+  children: React.ReactNode;
+}
+
+function Button({ children, style }: TokenamiStyle<ButtonProps>) {
+  return (
+    <button style={css(defaultButtonStyles, style)}>
+      {children}
+    </button>
+  );
+}
+
+// Usage - style prop overrides defaults
+<Button style={{ '--padding': 'var(--space_6)' }}>
+  Click me
+</Button>
+```
+
+### With Composed Styles
+
+Use with `css.compose` for variant-based components:
+
+```typescript
+import { css } from '@tokenami/css';
+import type { TokenamiStyle, Variants } from '@tokenami/css';
+
+const button = css.compose({
+  '--padding': 'var(--space_3)',
+  '--border-radius': 'var(--radius_md)',
+  
+  variants: {
+    variant: {
+      primary: {
+        '--background-color': 'var(--color_primary)',
+        '--color': 'var(--color_white)'
+      },
+      secondary: {
+        '--background-color': 'var(--color_gray-200)',
+        '--color': 'var(--color_gray-900)'
+      }
+    }
+  }
+});
+
+type ButtonVariants = Variants<typeof button>;
+
+interface ButtonProps extends ButtonVariants {
+  children: React.ReactNode;
+}
+
+function Button({ 
+  children, 
+  variant = 'primary',
+  style 
+}: TokenamiStyle<ButtonProps>) {
+  const [cn, buttonStyle] = button({ variant });
+  
+  return (
+    <button className={cn()} style={buttonStyle(style)}>
+      {children}
+    </button>
+  );
+}
+
+// Usage - style prop adds additional overrides
+<Button 
+  variant="primary" 
+  style={{ '--font-size': 'var(--font-size_lg)' }}
+>
+  Click me
+</Button>
+```
+
+### With HTML Element Props
+
+Combine with native HTML element props:
+
+```typescript
+import type { TokenamiStyle } from '@tokenami/css';
+import type { ComponentPropsWithoutRef } from 'react';
+
+type ButtonProps = TokenamiStyle<ComponentPropsWithoutRef<'button'>>;
+
+function Button(props: ButtonProps) {
+  return <button {...props} />;
+}
+
+// Inherits all button props + style prop
+<Button 
+  type="button"
+  disabled
+  style={{ '--opacity': '0.5' }}
+>
+  Click me
+</Button>
+```
+
+### Polymorphic Components
+
+Create components that accept different element types:
+
+```typescript
+import type { TokenamiStyle } from '@tokenami/css';
+import type { ElementType, ComponentPropsWithoutRef } from 'react';
+
+interface BoxProps<T extends ElementType = 'div'> {
+  as?: T;
+  children: React.ReactNode;
+}
+
+type PolymorphicBoxProps<T extends ElementType = 'div'> = TokenamiStyle<
+  BoxProps<T> & Omit<ComponentPropsWithoutRef<T>, keyof BoxProps<T>>
+>;
+
+function Box<T extends ElementType = 'div'>({
+  as,
+  children,
+  style,
+  ...props
+}: PolymorphicBoxProps<T>) {
+  const Component = as || 'div';
+  return <Component style={style} {...props}>{children}</Component>;
+}
+
+// Usage
+<Box style={{ '--padding': 'var(--space_4)' }}>
+  Div element
+</Box>
+
+<Box 
+  as="section"
+  style={{ '--padding': 'var(--space_6)' }}
+>
+  Section element
+</Box>
+```
+
+### Forwarding Refs
+
+Use with forwardRef for ref support:
+
+```typescript
+import { forwardRef } from 'react';
+import type { TokenamiStyle } from '@tokenami/css';
+
+interface ButtonProps {
+  children: React.ReactNode;
+}
+
+const Button = forwardRef<
+  HTMLButtonElement, 
+  TokenamiStyle<ButtonProps>
+>(({ children, style }, ref) => {
+  return (
+    <button ref={ref} style={style}>
+      {children}
+    </button>
+  );
+});
+
+Button.displayName = 'Button';
+```
+
+### With Generic Props
+
+Use with generic component props:
+
+```typescript
+import type { TokenamiStyle } from '@tokenami/css';
+
+interface SelectProps<T> {
+  value: T;
+  options: T[];
+  onChange: (value: T) => void;
+}
+
+function Select<T extends string | number>({
+  value,
+  options,
+  onChange,
+  style
+}: TokenamiStyle<SelectProps<T>>) {
+  return (
+    <select 
+      value={value} 
+      onChange={(e) => onChange(e.target.value as T)}
+      style={style}
+    >
+      {options.map(option => (
+        <option key={option} value={option}>{option}</option>
+      ))}
+    </select>
+  );
+}
+```
+
+## Type Details
+
+The `TokenamiStyle` type:
+
+- Adds an optional `style` prop to your component props
+- Accepts `TokenamiProperties` (raw token properties)
+- Accepts `TokenamiCSS` (output from `css()` or composed styles)
+- Preserves all original prop types
+- Works with union types, intersections, and generics
+
+## Related
+
+- [css](/api/css) - Apply and merge Tokenami styles
+- [css.compose](/api/css-compose) - Create reusable component styles
+- [Variants](/api/types/variants) - Extract variant types from composed styles

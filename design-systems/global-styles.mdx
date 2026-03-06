@@ -1,0 +1,371 @@
+---
+title: 'Global Styles'
+description: 'Configure global CSS styles in your design system'
+---
+
+# Global Styles
+
+Global styles allow you to apply base styles to your application as part of your design system configuration. These styles are included in the generated stylesheet.
+
+## Configuration
+
+Define global styles using the `globalStyles` key in your config:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  globalStyles: {
+    '*, *::before, *::after': {
+      boxSizing: 'border-box',
+    },
+    body: {
+      fontFamily: 'system-ui, sans-serif',
+      lineHeight: 1.5,
+      margin: 0,
+      padding: 0,
+    },
+  },
+});
+```
+
+## CSS Reset
+
+A common use case is to include a CSS reset. Here's a minimal reset:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    '*, *::before, *::after': {
+      boxSizing: 'border-box',
+      margin: 0,
+      padding: 0,
+      border: 0,
+    },
+    'html, body': {
+      height: '100%',
+    },
+    body: {
+      lineHeight: 1.5,
+      WebkitFontSmoothing: 'antialiased',
+    },
+    'img, picture, video, canvas, svg': {
+      display: 'block',
+      maxWidth: '100%',
+    },
+    'input, button, textarea, select': {
+      font: 'inherit',
+    },
+    'p, h1, h2, h3, h4, h5, h6': {
+      overflowWrap: 'break-word',
+    },
+  },
+});
+```
+
+## Official System Reset
+
+The [@tokenami/ds](/design-systems/official-system) package includes a comprehensive reset based on [Tailwind's Preflight](https://github.com/tailwindlabs/tailwindcss/blob/next/packages/tailwindcss/preflight.css):
+
+```ts
+globalStyles: {
+  '*, *::before, *::after': {
+    boxSizing: 'border-box',
+    margin: 0,
+    padding: 0,
+    border: 0,
+  },
+  'html, :host': {
+    lineHeight: 1.5,
+    WebkitTextSizeAdjust: '100%',
+    tabSize: 4,
+    fontFamily: 'var(--font-family)',
+    fontFeatureSettings: 'normal',
+    fontVariationSettings: 'normal',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  body: {
+    lineHeight: 'inherit',
+  },
+  // ... and many more rules
+}
+```
+
+See the [source code](https://github.com/tokenami/tokenami/blob/main/packages/ds/src/index.ts) for the complete reset.
+
+## Using Theme Variables
+
+Global styles can reference your theme tokens:
+
+```ts
+export default createConfig({
+  theme: {
+    color: {
+      background: '#ffffff',
+      text: '#1f2937',
+    },
+  },
+  globalStyles: {
+    body: {
+      backgroundColor: 'var(--color_background)',
+      color: 'var(--color_text)',
+    },
+  },
+});
+```
+
+## Setting Default Variables
+
+Use global styles to set default values for custom CSS variables:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    ':root': {
+      ['--font-family' as string]: `ui-sans-serif, system-ui, sans-serif`,
+      ['--font-weight' as string]: 'normal',
+      ['--font-style' as string]: 'normal',
+    },
+  },
+});
+```
+
+<Note>
+  Use TypeScript's `as string` assertion for custom property names that aren't standard CSS properties.
+</Note>
+
+## Typography Defaults
+
+Set up default typography styles:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    body: {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '1rem',
+      lineHeight: 1.5,
+      fontWeight: 'normal',
+    },
+    'h1, h2, h3, h4, h5, h6': {
+      fontWeight: 'bold',
+      lineHeight: 1.2,
+    },
+    h1: { fontSize: '2.5rem' },
+    h2: { fontSize: '2rem' },
+    h3: { fontSize: '1.75rem' },
+    h4: { fontSize: '1.5rem' },
+    h5: { fontSize: '1.25rem' },
+    h6: { fontSize: '1rem' },
+    'p, ul, ol': {
+      marginBottom: '1rem',
+    },
+  },
+});
+```
+
+## Form Elements
+
+Normalize form element styles:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    'button, input, select, textarea': {
+      font: 'inherit',
+      color: 'inherit',
+      background: 'transparent',
+      border: 'none',
+    },
+    'input, select, textarea': {
+      border: '1px solid var(--color_border)',
+      borderRadius: 'var(--radii_sm)',
+      padding: '0.5rem',
+    },
+    button: {
+      cursor: 'pointer',
+    },
+    'button:disabled': {
+      cursor: 'not-allowed',
+      opacity: 0.5,
+    },
+  },
+});
+```
+
+## Focus Styles
+
+Provide accessible focus indicators:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    ':focus-visible': {
+      outline: '2px solid var(--color_primary)',
+      outlineOffset: '2px',
+    },
+    'a:focus-visible': {
+      borderRadius: '2px',
+    },
+  },
+});
+```
+
+## Dark Mode Support
+
+Handle dark mode in global styles:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    ':root': {
+      ['--color-text' as string]: '#1f2937',
+      ['--color-bg' as string]: '#ffffff',
+    },
+    '[data-theme=dark]': {
+      ['--color-text' as string]: '#f9fafb',
+      ['--color-bg' as string]: '#1f2937',
+    },
+    body: {
+      color: 'var(--color-text)',
+      backgroundColor: 'var(--color-bg)',
+    },
+  },
+});
+```
+
+## Media Queries
+
+Global styles support media queries:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    body: {
+      fontSize: '16px',
+    },
+    '@media (min-width: 768px)': {
+      body: {
+        fontSize: '18px',
+      },
+    },
+  },
+});
+```
+
+## Pseudo-elements
+
+Style pseudo-elements globally:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    '::selection': {
+      backgroundColor: 'var(--color_primary)',
+      color: 'white',
+    },
+    '::placeholder': {
+      opacity: 0.6,
+      color: 'currentColor',
+    },
+  },
+});
+```
+
+## Web Font Loading
+
+Define @font-face rules:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    '@font-face': {
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fontWeight: '400',
+      fontDisplay: 'swap',
+      src: `url('/fonts/inter-regular.woff2') format('woff2')`,
+    },
+  },
+});
+```
+
+<Warning>
+  For multiple @font-face declarations, you'll need to use an array or separate keys. Consider loading fonts via link tags in your HTML instead.
+</Warning>
+
+## Print Styles
+
+Add print-specific styles:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    '@media print': {
+      body: {
+        fontSize: '12pt',
+      },
+      'a[href]::after': {
+        content: '" (" attr(href) ")"',
+      },
+      'nav, footer': {
+        display: 'none',
+      },
+    },
+  },
+});
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep It Minimal">
+    Only include truly global styles. Component-specific styles should use the `css` utility.
+  </Accordion>
+  
+  <Accordion title="Use Theme Tokens">
+    Reference theme variables rather than hardcoding values for consistency.
+  </Accordion>
+  
+  <Accordion title="Consider Accessibility">
+    Include focus indicators, proper contrast, and reduced motion preferences.
+  </Accordion>
+  
+  <Accordion title="Test Across Browsers">
+    Global styles affect your entire application. Test thoroughly.
+  </Accordion>
+  
+  <Accordion title="Document Custom Variables">
+    If you set custom CSS variables in :root, document them for consumers.
+  </Accordion>
+</AccordionGroup>
+
+## Reduced Motion
+
+Respect user preferences for reduced motion:
+
+```ts
+export default createConfig({
+  globalStyles: {
+    '@media (prefers-reduced-motion: reduce)': {
+      '*': {
+        animationDuration: '0.01ms !important',
+        animationIterationCount: '1 !important',
+        transitionDuration: '0.01ms !important',
+        scrollBehavior: 'auto !important',
+      },
+    },
+  },
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Breakpoints" icon="mobile" href="/design-systems/breakpoints">
+    Configure responsive breakpoints
+  </Card>
+  <Card title="Animation" icon="wand-magic-sparkles" href="/design-systems/animation">
+    Add keyframes and animations
+  </Card>
+</CardGroup>

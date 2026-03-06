@@ -1,0 +1,468 @@
+---
+title: Config Options
+description: Complete reference for Tokenami configuration options
+---
+
+Tokenami configuration controls theme tokens, responsive behavior, selectors, and more. This reference covers all available options.
+
+## Configuration Object
+
+```typescript
+interface Config {
+  include: string[];
+  exclude?: string[];
+  grid?: string;
+  theme: Theme | ThemeModes;
+  themeSelector: (mode: string) => Selector;
+  responsive?: Responsive;
+  selectors?: Selectors;
+  aliases?: Aliases;
+  properties?: Properties;
+  customProperties?: CustomProperties;
+  globalStyles?: GlobalStyles;
+  keyframes?: Keyframes;
+}
+```
+
+## Required Options
+
+### include
+
+<ParamField path="include" type="string[]" required>
+  Glob patterns for files to scan for token usage. The CLI uses these patterns to find all token properties in your codebase.
+</ParamField>
+
+```typescript
+export default createConfig({
+  include: [
+    './src/**/*.{ts,tsx,js,jsx}',
+    './app/**/*.{ts,tsx}'
+  ]
+});
+```
+
+### theme
+
+<ParamField path="theme" type="Theme | ThemeModes" required>
+  Your design tokens organized by theme key. Each theme key contains token name/value pairs.
+</ParamField>
+
+#### Simple Theme
+
+```typescript
+export default createConfig({
+  include: ['./src/**/*.tsx'],
+  
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d',
+      white: '#ffffff'
+    },
+    space: {
+      1: '0.25rem',
+      2: '0.5rem',
+      4: '1rem'
+    },
+    'font-size': {
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem'
+    }
+  }
+});
+```
+
+#### Theme with Modes
+
+```typescript
+export default createConfig({
+  include: ['./src/**/*.tsx'],
+  
+  theme: {
+    root: {
+      // Available in all modes
+      space: {
+        1: '0.25rem',
+        2: '0.5rem',
+        4: '1rem'
+      }
+    },
+    modes: {
+      light: {
+        color: {
+          bg: '#ffffff',
+          text: '#000000'
+        }
+      },
+      dark: {
+        color: {
+          bg: '#000000',
+          text: '#ffffff'
+        }
+      }
+    }
+  },
+  
+  themeSelector: (mode) => `[data-theme="${mode}"]`
+});
+```
+
+### themeSelector
+
+<ParamField path="themeSelector" type="(mode: string) => Selector" default="(mode) => mode">
+  Function that returns a CSS selector for theme modes. Used when you have multiple theme modes (e.g., light/dark).
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  
+  // Data attribute approach
+  themeSelector: (mode) => `[data-theme="${mode}"]`,
+  
+  // Class-based approach
+  // themeSelector: (mode) => `.theme-${mode}`,
+  
+  // Prefers color scheme
+  // themeSelector: (mode) => mode === 'dark' 
+  //   ? '@media (prefers-color-scheme: dark)'
+  //   : ':root'
+});
+```
+
+## Optional Options
+
+### exclude
+
+<ParamField path="exclude" type="string[]">
+  Glob patterns for files to exclude from scanning. Useful for test files, stories, etc.
+</ParamField>
+
+```typescript
+export default createConfig({
+  include: ['./src/**/*.{ts,tsx}'],
+  exclude: [
+    './src/**/*.test.{ts,tsx}',
+    './src/**/*.stories.{ts,tsx}',
+    './src/**/__tests__/**'
+  ]
+});
+```
+
+### grid
+
+<ParamField path="grid" type="string">
+  Base unit for your spacing grid. Numeric token values are multiplied by this unit using `calc()`.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  grid: '0.25rem', // or '4px', '0.5rem', etc.
+});
+
+// Usage
+const styles = css({
+  '--padding': 4  // Becomes: calc(var(--_grid) * 4) = 1rem
+});
+```
+
+### responsive
+
+<ParamField path="responsive" type="Responsive">
+  Media query definitions for responsive styles. Keys become prefixes for token properties.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  responsive: {
+    sm: '@media (min-width: 640px)',
+    md: '@media (min-width: 768px)',
+    lg: '@media (min-width: 1024px)',
+    xl: '@media (min-width: 1280px)',
+    
+    // Custom queries
+    print: '@media print',
+    motion: '@media (prefers-reduced-motion: no-preference)'
+  }
+});
+
+// Usage
+const styles = css({
+  '--padding': 'var(--space_2)',
+  '--md_padding': 'var(--space_4)',  // Applies at md breakpoint
+  '--lg_padding': 'var(--space_6)'   // Applies at lg breakpoint
+});
+```
+
+### selectors
+
+<ParamField path="selectors" type="Selectors">
+  Named selectors for pseudo-classes, pseudo-elements, and other state-based styles.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  selectors: {
+    hover: '&:hover',
+    focus: '&:focus',
+    active: '&:active',
+    disabled: '&:disabled',
+    'focus-visible': '&:focus-visible',
+    
+    // Pseudo-elements
+    before: '&::before',
+    after: '&::after',
+    
+    // Complex selectors
+    dark: '[data-theme="dark"] &',
+    'group-hover': '.group:hover &',
+    'peer-focus': '.peer:focus ~ &',
+    
+    // Multiple selectors
+    'hover-focus': ['&:hover', '&:focus']
+  }
+});
+
+// Usage
+const styles = css({
+  '--color': 'var(--color_primary)',
+  '--hover_color': 'var(--color_primary-dark)',
+  '--focus_outline': '2px solid var(--color_primary)'
+});
+```
+
+### aliases
+
+<ParamField path="aliases" type="Aliases">
+  Shorthand property names that map to multiple CSS properties.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  aliases: {
+    // Padding
+    px: ['padding-left', 'padding-right'],
+    py: ['padding-top', 'padding-bottom'],
+    pt: ['padding-top'],
+    pr: ['padding-right'],
+    pb: ['padding-bottom'],
+    pl: ['padding-left'],
+    
+    // Margin
+    mx: ['margin-left', 'margin-right'],
+    my: ['margin-top', 'margin-bottom'],
+    mt: ['margin-top'],
+    mr: ['margin-right'],
+    mb: ['margin-bottom'],
+    ml: ['margin-left'],
+    
+    // Size
+    size: ['width', 'height'],
+    
+    // Border
+    'border-x': ['border-left', 'border-right'],
+    'border-y': ['border-top', 'border-bottom']
+  }
+});
+
+// Usage
+const styles = css({
+  '--px': 'var(--space_4)',  // Sets padding-left and padding-right
+  '--size': '100%'           // Sets width and height
+});
+```
+
+### properties
+
+<ParamField path="properties" type="Properties">
+  Maps CSS properties to theme keys, restricting which tokens can be used with each property.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  properties: {
+    // Color properties
+    'color': ['color'],
+    'background-color': ['color'],
+    'border-color': ['color'],
+    'outline-color': ['color'],
+    
+    // Spacing properties
+    'padding': ['space'],
+    'margin': ['space'],
+    'gap': ['space'],
+    'inset': ['space'],
+    
+    // Typography
+    'font-size': ['font-size'],
+    'font-family': ['font'],
+    'font-weight': ['font-weight'],
+    'line-height': ['leading'],
+    
+    // Sizing
+    'width': ['size', 'space'],
+    'height': ['size', 'space'],
+    
+    // Border
+    'border-radius': ['radius'],
+    'border-width': ['border-width']
+  }
+});
+```
+
+### customProperties
+
+<ParamField path="customProperties" type="CustomProperties">
+  Define custom CSS properties not in the standard CSS specification.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  customProperties: {
+    'custom-shadow': ['shadow'],
+    'custom-gradient': ['gradient'],
+    'icon-size': ['size']
+  }
+});
+
+// Usage
+const styles = css({
+  '--custom-shadow': 'var(--shadow_lg)',
+  '--icon-size': 'var(--size_4)'
+});
+```
+
+### globalStyles
+
+<ParamField path="globalStyles" type="GlobalStyles">
+  Global CSS rules applied to the stylesheet. Uses CSS-in-JS style object syntax.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  globalStyles: {
+    '*': {
+      boxSizing: 'border-box',
+      margin: 0,
+      padding: 0
+    },
+    'html, body': {
+      height: '100%'
+    },
+    body: {
+      fontFamily: 'system-ui, sans-serif',
+      lineHeight: 1.5,
+      color: 'var(--color_text)',
+      backgroundColor: 'var(--color_bg)'
+    },
+    'a': {
+      color: 'inherit',
+      textDecoration: 'none'
+    }
+  }
+});
+```
+
+### keyframes
+
+<ParamField path="keyframes" type="Keyframes">
+  CSS animation keyframes definitions.
+</ParamField>
+
+```typescript
+export default createConfig({
+  // ...
+  keyframes: {
+    fadeIn: {
+      '0%': { opacity: 0 },
+      '100%': { opacity: 1 }
+    },
+    slideUp: {
+      '0%': { 
+        transform: 'translateY(100%)',
+        opacity: 0
+      },
+      '100%': { 
+        transform: 'translateY(0)',
+        opacity: 1
+      }
+    },
+    spin: {
+      '0%': { transform: 'rotate(0deg)' },
+      '100%': { transform: 'rotate(360deg)' }
+    },
+    pulse: {
+      '0%, 100%': { opacity: 1 },
+      '50%': { opacity: 0.5 }
+    }
+  }
+});
+
+// Usage
+const styles = css({
+  '--animation-name': 'fadeIn'
+});
+```
+
+## Type Definitions
+
+```typescript
+type Theme = {
+  [themeKey: string]: {
+    [tokenName: string]: string | number
+  }
+};
+
+type ThemeModes = {
+  root: Theme;
+  modes: {
+    [modeName: string]: Theme
+  }
+};
+
+type Responsive = {
+  [breakpointName: string]: string  // Media query
+};
+
+type Selector = string | string[];
+
+type Selectors = {
+  [selectorName: string]: Selector
+};
+
+type Aliases = {
+  [aliasName: string]: string[]  // CSS property names
+};
+
+type Properties = {
+  [cssProperty: string]: string[]  // Theme key names
+};
+
+type CustomProperties = {
+  [customProperty: string]: string[]  // Theme key names
+};
+
+type GlobalStyles = {
+  [selector: string]: CSS.Properties
+};
+
+type Keyframes = {
+  [animationName: string]: {
+    [step: string]: CSS.Properties
+  }
+};
+```
+
+## Related
+
+- [createConfig](/api/create-config) - Create type-safe configuration
+- [CLI Commands](/api/cli/commands) - Use configuration with the CLI
+- [createCss](/api/create-css) - Create css function with config

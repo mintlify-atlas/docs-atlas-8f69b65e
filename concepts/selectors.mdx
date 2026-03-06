@@ -1,0 +1,260 @@
+---
+title: Selectors
+description: Learn how to use arbitrary selectors and custom selectors to style elements and their descendants
+---
+
+Tokenami provides two ways to apply conditional styles: arbitrary selectors for quick prototyping and custom selectors for reusable patterns.
+
+## Arbitrary Selectors
+
+Arbitrary selectors let you prototype quickly by writing CSS selectors inline. Use curly braces `{}` to define any selector:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--{&:hover}_color': 'var(--color_primary)',
+  '--{&:has(:focus)}_border-color': 'var(--color_highlight)',
+  '--{&[data-state=open]}_border-color': 'var(--color_primary)',
+})} />
+```
+
+### Styling Descendants
+
+Arbitrary selectors can style the current element and its descendants. Use an underscore `_` to represent spaces in your selector:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  // Style all <p> elements inside this div
+  '--{&_p}_color': 'var(--color_primary)',
+  
+  // Style links inside paragraphs
+  '--{&_p_a}_color': 'var(--color_blue)',
+  
+  // Complex selectors
+  '--{&_.card_h2}_font-size': 'var(--text-size_xl)',
+})} />
+```
+
+### Arbitrary Selector Examples
+
+<CodeGroup>
+```tsx Hover and focus
+<button style={css({
+  '--{&:hover}_background': 'var(--color_blue)',
+  '--{&:focus-visible}_outline': 'var(--line_ring)',
+})}>
+  Click me
+</button>
+```
+
+```tsx Data attributes
+<div style={css({
+  '--{&[data-state=open]}_display': 'block',
+  '--{&[data-state=closed]}_display': 'none',
+  '--{&[aria-expanded=true]}_background': 'var(--color_highlight)',
+})} />
+```
+
+```tsx Parent state
+<div style={css({
+  '--{&:has(:focus)}_border-color': 'var(--color_primary)',
+  '--{&:has(> button:hover)}_background': 'var(--color_hover)',
+})} />
+```
+
+```tsx Structural selectors
+<ul style={css({
+  '--{&_li:first-child}_border-top': 'none',
+  '--{&_li:last-child}_border-bottom': 'none',
+  '--{&_li:nth-child(even)}_background': 'var(--color_stripe)',
+})} />
+```
+</CodeGroup>
+
+## Custom Selectors
+
+For commonly-used selectors, define them in your configuration to create reusable shorthand names. This makes your code cleaner and more maintainable.
+
+### Defining Custom Selectors
+
+Add custom selectors to your `tokenami.config.ts`. Use the ampersand `&` to mark where the current element's selector should be injected:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  selectors: {
+    'parent-hover': '.parent:hover > &',
+    hover: '&:hover',
+    focus: '&:focus',
+    'focus-visible': '&:focus-visible',
+    active: '&:active',
+    disabled: '&:disabled',
+  },
+});
+```
+
+### Using Custom Selectors
+
+Once defined, use custom selectors with an underscore prefix:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<button style={css({
+  '--hover_background': 'var(--color_primary)',
+  '--focus-visible_outline': 'var(--line_ring)',
+  '--disabled_opacity': 0.5,
+})} />
+```
+
+### Built-in Selectors
+
+Tokenami includes common selectors by default:
+
+- `after` - `&::after`
+- `before` - `&::before`
+- `even` - `&:nth-child(even)`
+- `odd` - `&:nth-child(odd)`
+- `first-child` - `&:first-child`
+- `last-child` - `&:last-child`
+- `placeholder` - `&::placeholder`
+- `hover` - `&:hover`
+- `focus` - `&:focus`
+- `focus-visible` - `&:focus-visible`
+- `focus-within` - `&:focus-within`
+- `active` - `&:active`
+- `disabled` - `&:disabled`
+
+### Advanced Custom Selectors
+
+#### Nested Selectors
+
+Custom selectors can include media queries or other at-rules by using arrays:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  selectors: {
+    // Only apply hover on devices with hover capability
+    hover: ['@media (hover: hover) and (pointer: fine)', '&:hover'],
+    
+    // Multiple conditions
+    'safe-hover': [
+      '@media (hover: hover) and (pointer: fine)',
+      '&:not(:disabled):hover, &:not(:disabled):focus-visible',
+    ],
+  },
+});
+```
+
+#### Parent-based Selectors
+
+Create selectors that depend on parent state:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  selectors: {
+    'parent-hover': '.parent:hover > &',
+    'group-hover': '.group:hover &',
+    'group-focus': '.group:focus-within &',
+  },
+});
+```
+
+Usage:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div className="parent">
+  <img src="..." alt="" />
+  <button style={css({
+    '--parent-hover_opacity': 1,
+    '--parent-hover_color': 'var(--color_primary)',
+  })}>
+    Edit
+  </button>
+</div>
+```
+
+#### Complex Selector Examples
+
+<CodeGroup>
+```ts Group patterns
+export default createConfig({
+  selectors: {
+    'group-hover': [
+      '@media (hover: hover) and (pointer: fine)',
+      '.group:hover &',
+    ],
+    'hover-within': [
+      '@media (hover: hover) and (pointer: fine)',
+      '&:has(:where(a[href],button,input,select,textarea,[tabindex="0"]):not([tabindex="-1"]):not([disabled])):hover',
+    ],
+  },
+});
+```
+
+```ts Custom elements
+export default createConfig({
+  selectors: {
+    'webkit-scrollbar': '&::-webkit-scrollbar',
+    'webkit-scrollbar-thumb': '&::-webkit-scrollbar-thumb',
+    selection: '&::selection',
+  },
+});
+```
+</CodeGroup>
+
+## Combining Selectors with Breakpoints
+
+Both arbitrary and custom selectors can be combined with responsive breakpoints:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  // Mobile
+  '--hover_background': 'var(--color_blue)',
+  
+  // Medium screens and up
+  '--md_hover_background': 'var(--color_green)',
+  
+  // Large screens and up
+  '--lg_hover_background': 'var(--color_purple)',
+  
+  // Arbitrary selector with breakpoint
+  '--md_{&:has(:focus)}_border': 'var(--line_thick)',
+})} />
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use custom selectors for common patterns" icon="repeat">
+    Define frequently-used selectors in your config to keep code clean and consistent.
+  </Card>
+  
+  <Card title="Use arbitrary selectors for one-offs" icon="sparkles">
+    Use inline arbitrary selectors for unique cases that don't justify a custom selector.
+  </Card>
+  
+  <Card title="Limit descendant styling" icon="triangle-exclamation">
+    Arbitrary selectors work for current element and descendants, but avoid deep nesting for maintainability.
+  </Card>
+  
+  <Card title="Consider hover support" icon="mouse-pointer">
+    Wrap hover selectors in media queries to respect user preferences and device capabilities.
+  </Card>
+</CardGroup>
+
+<Note>
+Arbitrary selectors are intentionally limited to the current element and its descendants to maintain encapsulation and predictability in your styles.
+</Note>

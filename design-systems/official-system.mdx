@@ -1,0 +1,216 @@
+---
+title: 'Official Design System'
+description: 'Learn about the @tokenami/ds package and its comprehensive features'
+---
+
+# Official Design System
+
+The [@tokenami/ds](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) package is Tokenami's official design system, providing a production-ready foundation for your projects.
+
+## Features
+
+The official design system includes:
+
+- **Global reset** based on [Preflight from Tailwind](https://github.com/tailwindlabs/tailwindcss/blob/next/packages/tailwindcss/preflight.css)
+- **[Radix UI colours](https://www.radix-ui.com/colors)** with automatic dark mode
+- **[Fluid spacing and font sizes](https://utopia.fyi/)** for responsive design
+- **Right-to-left support** built in (`padding-left` becomes `padding-inline-start` etc.)
+- **Short aliases** for common properties (e.g. `--p` for padding)
+
+## Installation
+
+Install the package using your package manager:
+
+```sh
+npm install @tokenami/ds
+```
+
+## Setup
+
+Include the design system config in your `.tokenami/tokenami.config.js` file:
+
+```tsx
+import designSystemConfig from '@tokenami/ds';
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  ...designSystemConfig,
+  include: ['./app/**/*.{ts,tsx}'],
+});
+```
+
+<Warning>
+  The design system includes custom aliases for common properties. Follow the [aliases guide](/advanced-usage/property-aliases) to configure the `css` utility properly and ensure aliases merge correctly across component boundaries.
+</Warning>
+
+## Theme Selector
+
+Use a `data-theme` attribute to apply the appropriate light or dark theme:
+
+```tsx
+<body data-theme="dark">
+  {/* Your app */}
+</body>
+```
+
+The design system defaults to the `light` theme applied to the `:root` selector.
+
+## Grid System
+
+Spacing is based on a **4px grid** using `rem` units (calculated from a 16px base font size).
+
+Using numeric values for grid properties like `padding` and `margin` will apply multiples of this grid:
+
+```tsx
+css({ '--padding': 2 }) // Results in 8px (0.5rem) padding
+css({ '--margin': 4 })  // Results in 16px (1rem) margin
+```
+
+## Fluid Spacing
+
+Create responsive designs without micromanaging breakpoints using fluid spacing tokens. The [Utopia guide](https://utopia.fyi/) is a great resource for understanding these concepts.
+
+Use the `--fluid-<property-type>-clamp_<breakpoint-range>` toggle token:
+
+```tsx
+css({
+  '--padding': 'var(--fluid-p-clamp_min-max)',
+  '--fluid-p-min': 2,  // 8px at smallest breakpoint
+  '--fluid-p-max': 4,  // 16px at largest breakpoint
+});
+```
+
+### Adjusting Breakpoint Ranges
+
+Customize the breakpoints for fluid spacing:
+
+```tsx
+css({
+  '--padding': 'var(--fluid-p-clamp_sm-md)',
+  '--fluid-p-min': 2,
+  '--fluid-p-max': 4,
+});
+```
+
+Available ranges: `min-max`, `sm-md`, `sm-lg`, `sm-xl`, `md-lg`, `md-xl`, `md-2xl`, `lg-xl`, `lg-2xl`
+
+## Fluid Font Sizes
+
+Fluid font sizes work similarly, accepting fluid tokens:
+
+```tsx
+css({
+  '--font-size': 'var(--fluid-text-size-clamp_min-max)',
+  '--fluid-text-size-min': 'var(--fluid-text-size_xs)',  // 12px (0.75rem)
+  '--fluid-text-size-max': 'var(--fluid-text-size_lg)',  // 18px (1.125rem)
+});
+```
+
+This creates a font size that scales smoothly between breakpoints.
+
+## Radix UI Colours
+
+The design system uses [Radix UI P3 colours](https://www.radix-ui.com/colors) with fallbacks for browsers that don't support P3 colours.
+
+### Understanding the Scale
+
+A powerful feature of Radix colours is automatic dark mode by applying the appropriate steps in the scale. Learn more about [using the Radix palette](https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale).
+
+```tsx
+css({
+  '--background-color': 'var(--color_slate1)',  // Light background
+  '--color': 'var(--color_slate12)',            // Dark text
+});
+```
+
+### Colour Space
+
+Change the colour space using the `--color-space` property (defaults to `srgb`):
+
+```tsx
+<body style={css({ '--color-space': 'oklch' })}>
+  {/* Your app */}
+</body>
+```
+
+Supported values: `srgb`, `oklch`, `oklab`
+
+### Gradients
+
+Use gradient tokens with custom properties:
+
+```tsx
+css({
+  '--background-image': 'var(--gradient_to-b)',
+  '--gradient-from': 'var(--color_crimson9)',
+  '--gradient-to': 'var(--color_green10)',
+});
+```
+
+Available directions: `to-t`, `to-tr`, `to-r`, `to-br`, `to-b`, `to-bl`, `to-l`, `to-tl`
+
+Gradients respect the `--color-space` property.
+
+### Opacity, Tint, and Shade
+
+Apply opacity, tint, or shade to colours using mix tokens:
+
+```tsx
+css({
+  '--background-color': 'var(--mix-bg_opacity)',
+  '--mix-bg-color': 'var(--color_violet11)',
+  '--mix-bg-percent': 50,  // 50% opacity
+});
+```
+
+Available mix types:
+- `--mix-<property-type>_opacity` - Mix with transparent
+- `--mix-<property-type>_tint` - Mix with white
+- `--mix-<property-type>_shade` - Mix with black
+
+## Right-to-Left Support
+
+The design system includes RTL support out of the box. Directional properties automatically use logical properties:
+
+- `padding-left` → `padding-inline-start`
+- `padding-right` → `padding-inline-end`
+- `margin-left` → `margin-inline-start`
+- `margin-right` → `margin-inline-end`
+
+To disable this feature, remove the respective aliases from your config.
+
+## Built-in Animations
+
+The design system includes several useful keyframe animations:
+
+```tsx
+css({ '--animation': 'var(--anim_spin)' })    // Continuous rotation
+css({ '--animation': 'var(--anim_ping)' })    // Ping effect
+css({ '--animation': 'var(--anim_pulse)' })   // Opacity pulse
+css({ '--animation': 'var(--anim_bounce)' })  // Bounce effect
+css({ '--animation': 'var(--anim_wiggle)' })  // Wiggle rotation
+```
+
+## Property Aliases
+
+The design system includes convenient shorthand aliases:
+
+- `--p` for `padding`
+- `--px` for `padding-inline` (left/right)
+- `--py` for `padding-block` (top/bottom)
+- `--m` for `margin`
+- `--mx` for `margin-inline`
+- `--my` for `margin-block`
+
+And many more. See the [source code](https://github.com/tokenami/tokenami/blob/main/packages/ds/src/index.ts) for a complete list.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Building Your Own" icon="hammer" href="/design-systems/building-your-own">
+    Create and publish a custom design system
+  </Card>
+  <Card title="Global Styles" icon="globe" href="/design-systems/global-styles">
+    Learn about configuring global styles
+  </Card>
+</CardGroup>

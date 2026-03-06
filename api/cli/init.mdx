@@ -1,0 +1,330 @@
+---
+title: tokenami init
+description: Initialize Tokenami in your project
+---
+
+The `init` command sets up Tokenami in your project by creating configuration files and generating TypeScript definitions.
+
+## Usage
+
+```bash
+tokenami init [options]
+```
+
+## Options
+
+<ParamField path="-c, --config" type="string">
+  Path to create the config file.
+  
+  **Default:** `./tokenami.config.{ts,js}` (based on project type)
+</ParamField>
+
+## Interactive Setup
+
+The `init` command runs an interactive setup:
+
+### 1. Project Type Detection
+
+If you have a `tsconfig.json`, TypeScript is auto-detected. Otherwise, you'll be asked:
+
+```
+? TypeScript or JavaScript?
+  › TypeScript
+    JavaScript
+```
+
+### 2. Watch Folder
+
+Specify which folder contains your components:
+
+```
+? What folder should Tokenami watch for token properties?
+  › ./app
+```
+
+Common options:
+- `./app` (Next.js App Router)
+- `./src` (Create React App, Vite)
+- `./src/components` (Component library)
+
+## Generated Files
+
+The command creates two files:
+
+### tokenami.config.ts
+
+Your main configuration file:
+
+```typescript title="tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  include: ['./app/**/*.{ts,tsx}'],
+
+  theme: {
+    color: {
+      primary: '#007bff',
+      secondary: '#6c757d',
+    },
+    space: {
+      1: '0.25rem',
+      2: '0.5rem',
+      3: '0.75rem',
+      4: '1rem',
+    },
+  },
+});
+```
+
+### tokenami.d.ts
+
+TypeScript declarations for global type augmentation:
+
+```typescript title="tokenami.d.ts"
+import type config from './tokenami.config';
+
+type Config = typeof config;
+
+declare module '@tokenami/css' {
+  interface TokenamiConfig extends Config {}
+}
+```
+
+This enables full type inference for your theme tokens.
+
+## Examples
+
+### TypeScript Project
+
+Initialize in a TypeScript project:
+
+```bash
+tokenami init
+```
+
+Interactive prompts:
+```
+✔ TypeScript or JavaScript? › TypeScript
+✔ What folder should Tokenami watch? › ./src
+```
+
+Creates:
+- `./tokenami.config.ts`
+- `./tokenami.d.ts`
+
+### JavaScript Project
+
+Initialize in a JavaScript project:
+
+```bash
+tokenami init
+```
+
+Interactive prompts:
+```
+✔ TypeScript or JavaScript? › JavaScript
+✔ What folder should Tokenami watch? › ./src
+```
+
+Creates:
+- `./tokenami.config.js`
+- `./tokenami.d.ts` (still created for editor support)
+
+### Custom Config Path
+
+Create config in a custom location:
+
+```bash
+tokenami init --config ./config/tokenami.config.ts
+```
+
+Creates:
+- `./config/tokenami.config.ts`
+- `./config/tokenami.d.ts`
+
+### Monorepo Setup
+
+For monorepos, run `init` in each package:
+
+```bash
+cd packages/ui
+tokenami init --config ./tokenami.config.ts
+
+cd ../app
+tokenami init --config ./tokenami.config.ts
+```
+
+## After Initialization
+
+### 1. Customize Your Config
+
+Edit `tokenami.config.ts` to add your design tokens:
+
+```typescript title="tokenami.config.ts"
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  include: ['./app/**/*.{ts,tsx}'],
+  
+  theme: {
+    color: {
+      // Add your brand colors
+      brand: '#007bff',
+      danger: '#dc3545',
+      success: '#28a745',
+    },
+    space: {
+      // Customize spacing scale
+      1: '0.25rem',
+      2: '0.5rem',
+      3: '0.75rem',
+      4: '1rem',
+      5: '1.25rem',
+      6: '1.5rem',
+    },
+    // Add more theme keys
+    'font-size': {
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+    },
+  },
+  
+  // Add responsive breakpoints
+  responsive: {
+    sm: '@media (min-width: 640px)',
+    md: '@media (min-width: 768px)',
+    lg: '@media (min-width: 1024px)',
+  },
+  
+  // Add selectors
+  selectors: {
+    hover: '&:hover',
+    focus: '&:focus',
+  },
+});
+```
+
+### 2. Generate Your Stylesheet
+
+Run the CLI to generate CSS:
+
+```bash
+tokenami
+```
+
+This creates `public/tokenami.css`.
+
+### 3. Include the Stylesheet
+
+Add the CSS to your app:
+
+```tsx title="app/layout.tsx"
+import '../public/tokenami.css';
+
+export default function RootLayout({ children }) {
+  return <html><body>{children}</body></html>;
+}
+```
+
+### 4. Start Using Tokenami
+
+Use tokens in your components:
+
+```tsx
+import { css } from '@tokenami/css';
+
+export function Button() {
+  return (
+    <button style={css({
+      '--padding': 'var(--space_3)',
+      '--background-color': 'var(--color_brand)',
+      '--color': 'white'
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+## Re-running Init
+
+You can safely re-run `init` to recreate files:
+
+```bash
+tokenami init
+```
+
+This will:
+- ✅ Overwrite existing config (prompts first if interactive)
+- ✅ Regenerate type definitions
+- ✅ Keep your existing theme tokens if you choose
+
+## TypeScript Configuration
+
+Ensure `tokenami.d.ts` is included in your `tsconfig.json`:
+
+```json title="tsconfig.json"
+{
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "tokenami.d.ts"  // Include type definitions
+  ]
+}
+```
+
+If using a custom config path:
+
+```json title="tsconfig.json"
+{
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "config/tokenami.d.ts"
+  ]
+}
+```
+
+## Troubleshooting
+
+### TypeScript Not Detecting Types
+
+Ensure `tokenami.d.ts` is:
+1. Created in the same directory as your config
+2. Included in your `tsconfig.json`
+3. Not excluded by `exclude` patterns
+
+Restart your TypeScript server:
+- VS Code: `Cmd/Ctrl + Shift + P` → "TypeScript: Restart TS Server"
+
+### Config File Not Created
+
+Check permissions:
+```bash
+ls -la ./tokenami.config.ts
+```
+
+Try with explicit path:
+```bash
+tokenami init --config ./tokenami.config.ts
+```
+
+### JavaScript Project Type Issues
+
+For JavaScript projects, add JSDoc types:
+
+```javascript title="tokenami.config.js"
+import { createConfig } from '@tokenami/css';
+
+/** @type {import('@tokenami/css').Config} */
+export default createConfig({
+  // ...
+});
+```
+
+## Related
+
+- [Config Options](/api/config-options) - Complete configuration reference
+- [CLI Commands](/api/cli/commands) - All CLI commands
+- [createConfig](/api/create-config) - Config API reference

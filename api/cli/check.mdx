@@ -1,0 +1,350 @@
+---
+title: tokenami check
+description: Validate token usage and enforce type safety
+---
+
+The `check` command validates your token usage, ensuring all tokens are correctly typed and used according to your configuration. It's ideal for CI/CD pipelines and pre-commit hooks.
+
+## Usage
+
+```bash
+tokenami check [options]
+```
+
+## Options
+
+<ParamField path="-c, --config" type="string">
+  Path to a custom config file.
+  
+  **Default:** `./tokenami.config.{ts,js}`
+</ParamField>
+
+## What It Checks
+
+The `check` command validates:
+
+### 1. Token Property Validity
+
+- All token properties match your configuration
+- Properties use correct theme keys
+- Required theme tokens exist
+
+### 2. Token Value Correctness
+
+- Token values reference existing theme tokens
+- Values match their property's allowed theme keys
+- Arbitrary values are properly formatted
+
+### 3. Type Safety
+
+- Token properties are correctly typed
+- Variant configurations are valid
+- Property/theme key mappings are correct
+
+### 4. Configuration Issues
+
+- Theme configuration is valid
+- Responsive definitions are correct
+- Selector definitions are valid
+- Alias mappings are correct
+
+## Examples
+
+### Basic Check
+
+Validate your project:
+
+```bash
+tokenami check
+```
+
+Success output:
+```
+✓ All token properties are valid
+✓ All token values reference existing tokens
+✓ No type errors found
+```
+
+Error output:
+```
+✖ Found 3 errors:
+
+src/components/Button.tsx:12:5
+  Error: Property '--color' expects a value from theme key 'color',
+         but received 'var(--space_4)' (from 'space' theme key)
+  
+  '--color': 'var(--space_4)'
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/components/Card.tsx:8:5
+  Error: Token 'var(--color_invalid)' does not exist in theme
+  
+  '--background-color': 'var(--color_invalid)'
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+
+### With Custom Config
+
+Check using a specific config file:
+
+```bash
+tokenami check --config ./config/tokens.ts
+```
+
+### In CI/CD Pipeline
+
+Add to your CI workflow:
+
+```yaml title=".github/workflows/ci.yml"
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install
+      - run: npm run tokenami:check
+      - run: npm run test
+```
+
+### Package.json Script
+
+Add a script for convenience:
+
+```json title="package.json"
+{
+  "scripts": {
+    "tokenami:check": "tokenami check",
+    "lint": "eslint . && tokenami check",
+    "ci": "tokenami check && npm test && npm run build"
+  }
+}
+```
+
+Run with:
+```bash
+npm run tokenami:check
+```
+
+### Pre-commit Hook
+
+Validate before committing:
+
+```json title="package.json"
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "tokenami check && lint-staged"
+    }
+  }
+}
+```
+
+Or with `husky` directly:
+
+```bash title=".husky/pre-commit"
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+tokenami check
+```
+
+## Error Types
+
+### Invalid Token Property
+
+Property doesn't match configuration:
+
+```tsx
+// ❌ Error: Invalid token property
+const styles = css({
+  '--padding': 'var(--color_primary)'  // Wrong theme key
+});
+
+// Error message:
+// Property '--padding' expects a value from theme key 'space',
+// but received 'var(--color_primary)' (from 'color' theme key)
+```
+
+### Non-existent Token
+
+Token doesn't exist in theme:
+
+```tsx
+// ❌ Error: Token doesn't exist
+const styles = css({
+  '--color': 'var(--color_tertiary)'  // Not in theme
+});
+
+// Error message:
+// Token 'var(--color_tertiary)' does not exist in theme
+// Available tokens in 'color': primary, secondary, danger, success
+```
+
+### Invalid Variant
+
+Variant key or value is incorrect:
+
+```tsx
+// ❌ Error: Invalid variant
+const button = css.compose({
+  variants: {
+    size: {
+      sm: { '--padding': 'var(--space_2)' },
+      md: { '--padding': 'var(--space_3)' }
+    }
+  }
+});
+
+const [cn, style] = button({ size: 'lg' });  // 'lg' doesn't exist
+
+// Error message:
+// Variant value 'lg' does not exist for variant 'size'
+// Available values: sm, md
+```
+
+### Malformed Token Value
+
+Token value format is incorrect:
+
+```tsx
+// ❌ Error: Malformed token value
+const styles = css({
+  '--color': 'var(--color-primary)'  // Should be underscore, not hyphen
+});
+
+// Error message:
+// Malformed token value 'var(--color-primary)'
+// Expected format: var(--{themeKey}_{tokenName})
+```
+
+### Type Mismatch
+
+TypeScript type errors in configuration:
+
+```typescript
+// ❌ Error: Type mismatch
+export default createConfig({
+  theme: {
+    color: {
+      primary: '#007bff',
+    }
+  },
+  properties: {
+    'color': ['size']  // 'size' theme key doesn't exist
+  }
+});
+
+// Error message:
+// Property mapping references non-existent theme key 'size'
+// Available theme keys: color
+```
+
+## Exit Codes
+
+The command uses standard exit codes:
+
+- `0` - No errors found (success)
+- `1` - Errors found or validation failed
+
+Useful for CI/CD:
+
+```bash
+tokenami check
+if [ $? -ne 0 ]; then
+  echo "Token validation failed!"
+  exit 1
+fi
+```
+
+## Performance
+
+The `check` command:
+
+- Uses TypeScript's compiler API for accurate checking
+- Processes files in parallel
+- Caches results when possible
+- Typically faster than full TypeScript compilation
+
+Typical performance:
+- Small project (under 100 files): ~2s
+- Medium project (100-500 files): 2-5s
+- Large project (500+ files): 5-15s
+
+## Comparison with TypeScript
+
+### tokenami check
+
+- ✅ Validates token-specific rules
+- ✅ Checks theme configuration
+- ✅ Validates token property/value relationships
+- ✅ Faster than full TypeScript check
+- ❌ Only checks Tokenami usage
+
+### tsc --noEmit
+
+- ✅ Full TypeScript type checking
+- ✅ Checks all code
+- ✅ Catches general type errors
+- ❌ Slower on large projects
+- ❌ Doesn't validate theme relationships
+
+### Use Both
+
+For best results, use both:
+
+```json title="package.json"
+{
+  "scripts": {
+    "type-check": "tsc --noEmit && tokenami check"
+  }
+}
+```
+
+## Troubleshooting
+
+### False Positives
+
+If you encounter false positives:
+
+1. Ensure `tokenami.d.ts` is included in your `tsconfig.json`
+2. Restart your TypeScript server
+3. Check that your config file exports are correct
+
+### Slow Performance
+
+1. Exclude test files in your config:
+   ```typescript
+   export default createConfig({
+     exclude: ['**/*.test.{ts,tsx}', '**/__tests__/**']
+   });
+   ```
+
+2. Use a more specific `include` pattern:
+   ```typescript
+   export default createConfig({
+     include: ['./src/components/**/*.tsx']  // More specific
+   });
+   ```
+
+### Config Not Found
+
+```bash
+# Verify config exists
+ls tokenami.config.ts
+
+# Or specify path
+tokenami check --config ./config/tokenami.config.ts
+```
+
+## Related
+
+- [CLI Commands](/api/cli/commands) - All CLI commands
+- [Config Options](/api/config-options) - Configuration reference
+- [tokenami init](/api/cli/init) - Initialize Tokenami

@@ -1,0 +1,190 @@
+---
+title: Grid Values
+description: Understand Tokenami's grid system for consistent spacing throughout your application
+---
+
+Tokenami uses a grid system for spacing properties like padding, margin, gap, and positioning. When you pass a number to these properties, Tokenami multiplies it by your configured grid value to calculate the final spacing.
+
+## How Grid Values Work
+
+The grid system provides a consistent spacing scale across your application. Instead of using arbitrary pixel values, you use multipliers of your base grid unit:
+
+```tsx
+import { css } from '@tokenami/css';
+
+// With default grid of 0.25rem (4px)
+<div style={css({
+  '--padding': 2,  // Results in 0.5rem (8px)
+  '--margin': 4,   // Results in 1rem (16px)
+  '--gap': 8,      // Results in 2rem (32px)
+})} />
+```
+
+## Default Grid Configuration
+
+By default, Tokenami's grid is set to `0.25rem` (typically 4px). This provides a fine-grained spacing scale that works well for most designs:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  grid: '0.25rem', // Default value
+  // ... rest of your config
+});
+```
+
+## Custom Grid Configuration
+
+You can customize the grid value to match your design system:
+
+<CodeGroup>
+```ts Pixel-based
+export default createConfig({
+  grid: '4px',
+  // ... rest of your config
+});
+```
+
+```ts Rem-based
+export default createConfig({
+  grid: '0.5rem',
+  // ... rest of your config
+});
+```
+
+```ts Larger scale
+export default createConfig({
+  grid: '10px',
+  // ... rest of your config
+});
+```
+</CodeGroup>
+
+## Properties Using Grid Values
+
+The grid system applies to spacing and positioning properties. Here are the properties that use grid values by default:
+
+### Spacing Properties
+
+- `padding` and all variants (`padding-top`, `padding-inline`, etc.)
+- `margin` and all variants (`margin-bottom`, `margin-block`, etc.)
+- `gap`, `row-gap`, `column-gap`
+
+### Positioning Properties
+
+- `inset` and all variants (`inset-block`, `inset-inline`, etc.)
+- `top`, `right`, `bottom`, `left`
+
+### Sizing Properties
+
+- `width`, `height`
+- `min-width`, `min-height`
+- `max-width`, `max-height`
+- `block-size`, `inline-size`
+- And their min/max variants
+
+### Other Properties
+
+- `scroll-margin` and variants
+- `scroll-padding` and variants
+- `flex-basis`
+- `column-width`
+- `background-position` and variants
+
+## Usage Examples
+
+### Basic Spacing
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Button() {
+  return (
+    <button style={css({
+      '--padding-inline': 4,  // Horizontal padding
+      '--padding-block': 2,   // Vertical padding
+      '--margin-top': 3,
+    })}>
+      Click me
+    </button>
+  );
+}
+```
+
+### Layout Spacing
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Card() {
+  return (
+    <div style={css({
+      '--padding': 5,
+      '--gap': 4,
+      '--margin-bottom': 6,
+    })}>
+      {/* Card content */}
+    </div>
+  );
+}
+```
+
+### Responsive Spacing
+
+Combine grid values with responsive breakpoints:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--padding': 2,           // Base padding
+  '--md_padding': 4,        // Medium breakpoint
+  '--lg_padding': 6,        // Large breakpoint
+})} />
+```
+
+### Positioning
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--position': 'absolute',
+  '--top': 4,
+  '--right': 4,
+  '--inset-inline': 0,      // Left and right = 0
+})} />
+```
+
+## Using Specific Units
+
+While grid values are recommended for consistency, you can still use specific CSS units when needed. See the [Arbitrary Values](/concepts/arbitrary-values) guide for how to use custom values that don't fit your grid system.
+
+## Mixing Grid and Theme Values
+
+Many properties accept both grid values (numbers) and theme tokens (CSS variables):
+
+```tsx
+import { css } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    size: {
+      full: '100%',
+      half: '50%',
+      screen: '100vh',
+    },
+  },
+});
+
+// Usage
+<div style={css({
+  '--width': 'var(--size_full)',    // Theme token
+  '--height': 50,                   // Grid value (50 * 0.25rem = 12.5rem)
+  '--padding': 4,                   // Grid value
+})} />
+```
+
+<Note>
+Using grid values creates a consistent spacing system and makes it easier to maintain visual rhythm throughout your application. The grid system is particularly useful for spacing, while theme tokens are better for absolute sizes.
+</Note>

@@ -1,0 +1,339 @@
+---
+title: 'Breakpoints'
+description: 'Configure responsive breakpoints for your design system'
+---
+
+# Breakpoints
+
+Breakpoints allow you to create responsive designs by applying different styles at different screen sizes. Tokenami uses the `responsive` configuration to define breakpoints.
+
+## Basic Configuration
+
+Define breakpoints in your config using media queries:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  responsive: {
+    sm: '@media (min-width: 640px)',
+    md: '@media (min-width: 768px)',
+    lg: '@media (min-width: 1024px)',
+    xl: '@media (min-width: 1280px)',
+  },
+});
+```
+
+## Using Breakpoints
+
+Add the breakpoint name as a prefix to any property:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div
+  style={css({
+    '--padding': 2,          // 8px on all screens
+    '--md_padding': 4,       // 16px on medium screens and up
+    '--lg_padding': 6,       // 24px on large screens and up
+  })}
+/>
+```
+
+## Official System Breakpoints
+
+The [@tokenami/ds](/design-systems/official-system) package uses rem-based breakpoints:
+
+```ts
+responsive: {
+  sm: '@media (min-width: 40rem)',     // 640px
+  md: '@media (min-width: 48rem)',     // 768px
+  lg: '@media (min-width: 64rem)',     // 1024px
+  xl: '@media (min-width: 80rem)',     // 1280px
+  xxl: '@media (min-width: 96rem)',    // 1536px
+}
+```
+
+<Tip>
+  Using `rem` units for breakpoints respects user font size preferences, improving accessibility.
+</Tip>
+
+## Combining with Selectors
+
+You can combine breakpoints with selectors:
+
+```tsx
+css({
+  '--color': 'var(--color_slate12)',
+  '--hover_color': 'var(--color_blue11)',
+  '--md_hover_color': 'var(--color_blue10)',  // Different hover color on medium screens
+})
+```
+
+## Container Queries
+
+Container queries work the same way:
+
+```ts
+export default createConfig({
+  responsive: {
+    'card-sm': '@container (min-width: 400px)',
+    'card-md': '@container (min-width: 600px)',
+    'card-lg': '@container (min-width: 800px)',
+  },
+});
+```
+
+Usage:
+
+```tsx
+<div style={{ containerType: 'inline-size' }}>
+  <div
+    style={css({
+      '--padding': 2,
+      '--card-sm_padding': 4,
+      '--card-md_padding': 6,
+    })}
+  >
+    Card content
+  </div>
+</div>
+```
+
+## Mobile-First vs Desktop-First
+
+### Mobile-First (Recommended)
+
+Start with mobile styles, then add larger breakpoints:
+
+```tsx
+css({
+  '--font-size': 'var(--font-size_sm)',   // Mobile
+  '--md_font-size': 'var(--font-size_md)', // Tablet
+  '--lg_font-size': 'var(--font-size_lg)', // Desktop
+})
+```
+
+```ts
+responsive: {
+  sm: '@media (min-width: 640px)',
+  md: '@media (min-width: 768px)',
+  lg: '@media (min-width: 1024px)',
+}
+```
+
+### Desktop-First
+
+Start with desktop styles, then add smaller breakpoints:
+
+```tsx
+css({
+  '--font-size': 'var(--font-size_lg)',   // Desktop
+  '--md_font-size': 'var(--font-size_md)', // Tablet
+  '--sm_font-size': 'var(--font-size_sm)', // Mobile
+})
+```
+
+```ts
+responsive: {
+  sm: '@media (max-width: 640px)',
+  md: '@media (max-width: 768px)',
+  lg: '@media (max-width: 1024px)',
+}
+```
+
+## Custom Media Queries
+
+Breakpoints can use any media query feature:
+
+### Orientation
+
+```ts
+responsive: {
+  portrait: '@media (orientation: portrait)',
+  landscape: '@media (orientation: landscape)',
+}
+```
+
+### Aspect Ratio
+
+```ts
+responsive: {
+  wide: '@media (min-aspect-ratio: 16/9)',
+  square: '@media (aspect-ratio: 1/1)',
+}
+```
+
+### Hover Support
+
+```ts
+responsive: {
+  'hover-enabled': '@media (hover: hover) and (pointer: fine)',
+  'touch-only': '@media (hover: none) and (pointer: coarse)',
+}
+```
+
+### High Resolution Displays
+
+```ts
+responsive: {
+  retina: '@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi)',
+}
+```
+
+### Reduced Motion
+
+```ts
+responsive: {
+  'motion-safe': '@media (prefers-reduced-motion: no-preference)',
+  'motion-reduce': '@media (prefers-reduced-motion: reduce)',
+}
+```
+
+### Color Scheme Preference
+
+```ts
+responsive: {
+  'prefer-light': '@media (prefers-color-scheme: light)',
+  'prefer-dark': '@media (prefers-color-scheme: dark)',
+}
+```
+
+## Multiple Conditions
+
+Combine multiple media features:
+
+```ts
+responsive: {
+  'lg-landscape': '@media (min-width: 1024px) and (orientation: landscape)',
+  'md-hover': '@media (min-width: 768px) and (hover: hover)',
+}
+```
+
+## Nested Selectors
+
+Breakpoints support nested selectors:
+
+```ts
+responsive: {
+  'md-hover': ['@media (min-width: 768px)', '&:hover'],
+}
+```
+
+```tsx
+css({
+  '--md-hover_color': 'var(--color_primary)',
+})
+```
+
+## Common Breakpoint Sets
+
+### Tailwind-style
+
+```ts
+responsive: {
+  sm: '@media (min-width: 640px)',
+  md: '@media (min-width: 768px)',
+  lg: '@media (min-width: 1024px)',
+  xl: '@media (min-width: 1280px)',
+  '2xl': '@media (min-width: 1536px)',
+}
+```
+
+### Bootstrap-style
+
+```ts
+responsive: {
+  sm: '@media (min-width: 576px)',
+  md: '@media (min-width: 768px)',
+  lg: '@media (min-width: 992px)',
+  xl: '@media (min-width: 1200px)',
+  xxl: '@media (min-width: 1400px)',
+}
+```
+
+### Material Design
+
+```ts
+responsive: {
+  xs: '@media (min-width: 0px)',
+  sm: '@media (min-width: 600px)',
+  md: '@media (min-width: 960px)',
+  lg: '@media (min-width: 1280px)',
+  xl: '@media (min-width: 1920px)',
+}
+```
+
+## Range Queries
+
+Define breakpoints that apply within a range:
+
+```ts
+responsive: {
+  'only-md': '@media (min-width: 768px) and (max-width: 1023px)',
+  'md-to-lg': '@media (min-width: 768px) and (max-width: 1279px)',
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Mobile-First">
+    Mobile-first designs are easier to progressively enhance and typically result in less CSS.
+  </Accordion>
+  
+  <Accordion title="Use rem Units">
+    Rem-based breakpoints respect user font size preferences, improving accessibility.
+  </Accordion>
+  
+  <Accordion title="Avoid Too Many Breakpoints">
+    3-5 breakpoints are usually sufficient. Too many can make your code harder to maintain.
+  </Accordion>
+  
+  <Accordion title="Test on Real Devices">
+    Don't rely solely on browser dev tools. Test on actual devices when possible.
+  </Accordion>
+  
+  <Accordion title="Consider Content, Not Devices">
+    Set breakpoints based on where your content needs to reflow, not specific device sizes.
+  </Accordion>
+</AccordionGroup>
+
+## Debugging Breakpoints
+
+Create a debug breakpoint indicator:
+
+```tsx
+const BreakpointIndicator = () => (
+  <div
+    style={css({
+      '--position': 'fixed',
+      '--bottom': 4,
+      '--right': 4,
+      '--padding': 2,
+      '--background-color': 'var(--color_slate12)',
+      '--color': 'var(--color_slate1)',
+      '--border-radius': 'var(--radii_sm)',
+      '--font-size': 'var(--font-size_xs)',
+      '--z-index': 9999,
+    })}
+  >
+    <span>xs</span>
+    <span style={css({ '--display': 'none', '--sm_display': 'block' })}>sm</span>
+    <span style={css({ '--display': 'none', '--md_display': 'block' })}>md</span>
+    <span style={css({ '--display': 'none', '--lg_display': 'block' })}>lg</span>
+    <span style={css({ '--display': 'none', '--xl_display': 'block' })}>xl</span>
+  </div>
+);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Animation" icon="wand-magic-sparkles" href="/design-systems/animation">
+    Add keyframes and animations
+  </Card>
+  <Card title="Global Styles" icon="globe" href="/design-systems/global-styles">
+    Configure global CSS styles
+  </Card>
+</CardGroup>

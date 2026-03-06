@@ -1,0 +1,300 @@
+---
+title: Installation
+description: Install Tokenami and set up your project for type-safe styling with design tokens
+---
+
+# Installation
+
+Get Tokenami up and running in your project with these simple steps. Tokenami offers a CLI tool for generating static styles, a lightweight CSS utility for authoring styles, and a TypeScript plugin for enhanced developer experience.
+
+## Quick Start
+
+Jump right in with our [Vite starter template](https://github.com/tokenami/tokenami-vite), or follow the steps below to configure your own project.
+
+## Prerequisites
+
+<Info>
+  Tokenami requires Node.js version 20 or higher and TypeScript 5+.
+</Info>
+
+Make sure you have the following installed:
+
+- Node.js >= 20
+- TypeScript >= 5
+- A package manager (npm, pnpm, or yarn)
+
+## Step 1: Install Packages
+
+Tokenami consists of two packages:
+
+- `tokenami` - CLI tool and TypeScript plugin (dev dependency)
+- `@tokenami/css` - Runtime CSS utility (~2.5kb gzipped)
+
+Install using your preferred package manager:
+
+<CodeGroup>
+
+```bash npm
+npm install -D tokenami && npm install @tokenami/css
+```
+
+```bash pnpm
+pnpm add -D tokenami && pnpm add @tokenami/css
+```
+
+```bash yarn
+yarn add -D tokenami && yarn add @tokenami/css
+```
+
+</CodeGroup>
+
+## Step 2: Initialize Your Project
+
+Run the Tokenami initializer to create the required configuration files:
+
+```bash
+npx tokenami init
+```
+
+This creates:
+
+- `.tokenami/tokenami.config.ts` - Your design system configuration
+- `.tokenami/tokenami.env.d.ts` - TypeScript declarations for autocomplete
+
+## Step 3: Configure TypeScript
+
+Update your `tsconfig.json` (or `jsconfig.json` for JavaScript projects) to include the Tokenami TypeScript plugin and type definitions:
+
+```json tsconfig.json
+{
+  "include": [".tokenami/tokenami.env.d.ts", "src"],
+  "compilerOptions": {
+    "plugins": [{ "name": "tokenami" }]
+  }
+}
+```
+
+<Warning>
+  Make sure your editor uses the workspace TypeScript version. See the [VS Code documentation](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) for instructions.
+</Warning>
+
+### Editor Setup
+
+For the best developer experience, configure your editor:
+
+#### VS Code
+
+Create or update `.vscode/settings.json`:
+
+```json .vscode/settings.json
+{
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.suggest.filterGraceful": false,
+  "editor.suggest.matchOnWordStartOnly": true
+}
+```
+
+These settings enable:
+- **String completions** - Get autocomplete while typing CSS variable names
+- **Faster suggestions** - Filter out irrelevant matches
+- **Accurate matching** - Prioritize suggestions that match your typing
+
+<Info>
+  Tokenami officially supports VS Code, Cursor, Windsurf, and Zed.
+</Info>
+
+## Step 4: Configure Your Theme
+
+Customize your design tokens in `.tokenami/tokenami.config.ts`:
+
+```ts .tokenami/tokenami.config.ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      'slate-100': '#f1f5f9',
+      'slate-700': '#334155',
+      'sky-500': '#0ea5e9',
+    },
+    radii: {
+      rounded: '10px',
+      circle: '9999px',
+      none: 'none',
+    },
+  },
+  responsive: {
+    md: '@media (min-width: 700px)',
+    lg: '@media (min-width: 1024px)',
+  },
+  include: ['./src/**/*.{ts,tsx,js,jsx}'],
+});
+```
+
+<Note>
+  Name your theme groups and tokens however you like. These names become part of your CSS variables (e.g., `var(--color_slate-100)`).
+</Note>
+
+## Step 5: Build Your Styles
+
+Run the Tokenami CLI to generate your stylesheet:
+
+```bash
+npx tokenami --output ./public/styles.css --watch
+```
+
+This command:
+- Scans files matching your `include` patterns
+- Generates atomic CSS rules based on your usage
+- Watches for changes in development
+- Outputs a static CSS file
+
+<Info>
+  Add this command to your `package.json` scripts for convenience:
+  
+  ```json
+  {
+    "scripts": {
+      "tokenami": "tokenami --output ./public/styles.css --watch"
+    }
+  }
+  ```
+</Info>
+
+## Step 6: Link Your Stylesheet
+
+Reference the generated CSS file in the `<head>` of your HTML document:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+For Next.js, add it to your root layout:
+
+```tsx app/layout.tsx
+import './styles.css';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+## Verify Your Setup
+
+Create a test component to verify everything is working:
+
+```tsx src/App.tsx
+import { css } from '@tokenami/css';
+
+function App() {
+  return (
+    <div style={css({
+      '--padding': 4,
+      '--background-color': 'var(--color_slate-100)',
+      '--color': 'var(--color_slate-700)',
+      '--border-radius': 'var(--radii_rounded)',
+    })}>
+      <h1 style={css({ '--margin-top': 0, '--margin-bottom': 2 })}>
+        Hello, Tokenami!
+      </h1>
+      <p>If you can see this styled, your setup is complete.</p>
+    </div>
+  );
+}
+
+export default App;
+```
+
+You should see:
+- Autocomplete suggestions when typing CSS variable names
+- Type errors if you use non-existent tokens
+- Styles applied to your component
+
+## Optional: Use the Official Design System
+
+Skip custom theme setup by using the [official Tokenami design system](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md), which includes:
+
+- Global CSS reset (based on Tailwind's Preflight)
+- Radix UI colors with automatic dark mode
+- Fluid spacing and typography (responsive by default)
+- RTL support built-in
+- Shorthand aliases (`--p` for padding, `--m` for margin, etc.)
+
+Install it with:
+
+<CodeGroup>
+
+```bash npm
+npm install @tokenami/ds
+```
+
+```bash pnpm
+pnpm add @tokenami/ds
+```
+
+```bash yarn
+yarn add @tokenami/ds
+```
+
+</CodeGroup>
+
+Then extend it in your config:
+
+```ts .tokenami/tokenami.config.ts
+import designSystemConfig from '@tokenami/ds';
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  ...designSystemConfig,
+  include: ['./src/**/*.{ts,tsx}'],
+});
+```
+
+## Troubleshooting
+
+### TypeScript Errors Not Showing
+
+If you don't see TypeScript errors for invalid tokens, make sure:
+
+1. Your editor is using the workspace TypeScript version
+2. The `plugins` field is correctly set in `tsconfig.json`
+3. You've restarted your editor after making config changes
+
+### Styles Not Applying
+
+If styles aren't showing up:
+
+1. Check that the CSS file is being generated at the correct path
+2. Verify the stylesheet is linked in your HTML
+3. Make sure the CLI watcher is running (`--watch` flag)
+4. Check your `include` patterns match your source files
+
+### Autocomplete Not Working
+
+If autocomplete isn't appearing:
+
+1. Enable string suggestions in your editor settings
+2. Make sure `.tokenami/tokenami.env.d.ts` is included in your `tsconfig.json`
+3. Try restarting your TypeScript server (VS Code: `Cmd/Ctrl+Shift+P` → "Restart TS Server")
+
+## What's Next?
+
+Now that you have Tokenami installed, learn how to build your first component in the quickstart guide.
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Build your first styled component with Tokenami
+</Card>

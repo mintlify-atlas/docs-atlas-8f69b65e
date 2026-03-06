@@ -1,0 +1,353 @@
+---
+title: 'Building Your Own Design System'
+description: 'Create and publish a custom design system package'
+---
+
+# Building Your Own Design System
+
+Tokenami makes it easy to create portable design systems that can be shared across projects or published for others to use.
+
+## Why Build a Design System?
+
+Creating a design system package offers several benefits:
+
+- **Consistency** across multiple projects
+- **Shared tokens** for colors, spacing, typography
+- **Reusable components** with type safety
+- **Version control** for design decisions
+- **Portable** - works with or without Tokenami
+
+## Package Structure
+
+A typical design system package contains:
+
+```
+@acme/design-system/
+├── src/
+│   ├── index.ts          # Config export
+│   └── colors.ts         # Optional: color definitions
+├── tokenami.config.ts    # Your configuration
+├── tokenami.css          # Generated stylesheet
+├── package.json
+└── README.md
+```
+
+## Creating the Configuration
+
+Start by creating a Tokenami config that defines your design system:
+
+```ts
+// src/index.ts
+import { createConfig } from '@tokenami/config';
+
+export default createConfig({
+  include: [],
+  grid: '0.25rem',
+  
+  // Define your theme tokens
+  theme: {
+    color: {
+      primary: '#3b82f6',
+      secondary: '#8b5cf6',
+      success: '#10b981',
+      danger: '#ef4444',
+      warning: '#f59e0b',
+      // Add more colors
+    },
+    radii: {
+      sm: '0.25rem',
+      md: '0.5rem',
+      lg: '1rem',
+      full: '9999px',
+    },
+    'font-size': {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+    },
+  },
+  
+  // Add responsive breakpoints
+  responsive: {
+    sm: '@media (min-width: 640px)',
+    md: '@media (min-width: 768px)',
+    lg: '@media (min-width: 1024px)',
+    xl: '@media (min-width: 1280px)',
+  },
+  
+  // Include useful animations
+  keyframes: {
+    fadeIn: {
+      from: { opacity: '0' },
+      to: { opacity: '1' },
+    },
+    slideUp: {
+      from: { transform: 'translateY(10px)', opacity: '0' },
+      to: { transform: 'translateY(0)', opacity: '1' },
+    },
+  },
+});
+```
+
+## Adding Global Styles
+
+Include global styles in your configuration:
+
+```ts
+export default createConfig({
+  // ... other config
+  
+  globalStyles: {
+    '*, *::before, *::after': {
+      boxSizing: 'border-box',
+      margin: 0,
+      padding: 0,
+    },
+    body: {
+      fontFamily: 'system-ui, sans-serif',
+      lineHeight: 1.5,
+      color: 'var(--color_text)',
+      backgroundColor: 'var(--color_background)',
+    },
+  },
+});
+```
+
+See [Global Styles](/design-systems/global-styles) for more details.
+
+## Multiple Themes
+
+Support light and dark modes using the `modes` configuration:
+
+```ts
+export default createConfig({
+  themeSelector: (mode) => 
+    mode === 'root' ? ':root' : `[data-theme=${mode}]`,
+  
+  theme: {
+    modes: {
+      light: {
+        color: {
+          background: '#ffffff',
+          text: '#1f2937',
+          primary: '#3b82f6',
+        },
+      },
+      dark: {
+        color: {
+          background: '#1f2937',
+          text: '#f9fafb',
+          primary: '#60a5fa',
+        },
+      },
+    },
+    root: {
+      // Shared tokens across themes
+      radii: {
+        sm: '0.25rem',
+        md: '0.5rem',
+      },
+    },
+  },
+});
+```
+
+## Property Aliases
+
+Create convenient shorthand properties:
+
+```ts
+export default createConfig({
+  aliases: {
+    p: ['padding'],
+    px: ['padding-inline-start', 'padding-inline-end'],
+    py: ['padding-block-start', 'padding-block-end'],
+    m: ['margin'],
+    mx: ['margin-inline-start', 'margin-inline-end'],
+    my: ['margin-block-start', 'margin-block-end'],
+    size: ['width', 'height'],
+  },
+});
+```
+
+## Custom Selectors
+
+Define reusable selector patterns:
+
+```ts
+export default createConfig({
+  selectors: {
+    hover: '&:hover',
+    focus: '&:focus',
+    'focus-visible': '&:focus-visible',
+    active: '&:active',
+    disabled: '&:disabled',
+    // Nested selectors
+    'group-hover': '.group:hover &',
+    'peer-focus': '.peer:focus ~ &',
+  },
+});
+```
+
+## Package Configuration
+
+Set up your `package.json`:
+
+```json
+{
+  "name": "@acme/design-system",
+  "version": "1.0.0",
+  "description": "ACME design system built with Tokenami",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "tokenami.css",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && tokenami --output tokenami.css",
+    "dev": "tokenami --output tokenami.css --watch"
+  },
+  "dependencies": {
+    "@tokenami/css": "latest"
+  },
+  "devDependencies": {
+    "tokenami": "latest",
+    "typescript": "latest"
+  }
+}
+```
+
+## Consuming the Design System
+
+### With Tokenami
+
+If the consumer is using Tokenami, they should include your design system in their config:
+
+```tsx
+import designSystemConfig from '@acme/design-system';
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  ...designSystemConfig,
+  include: [
+    './app/**/*.{ts,tsx}',
+    'node_modules/@acme/design-system/tokenami.css'
+  ],
+});
+```
+
+### Without Tokenami
+
+Projects not using Tokenami can still use your design system by including the CSS file:
+
+```html
+<link rel="stylesheet" href="node_modules/@acme/design-system/tokenami.css">
+```
+
+They can override styles by loading their own stylesheet after yours.
+
+## Publishing
+
+### To npm
+
+1. Build your package:
+   ```sh
+   npm run build
+   ```
+
+2. Publish to npm:
+   ```sh
+   npm publish
+   ```
+
+### To a Private Registry
+
+For organization-internal design systems:
+
+```sh
+npm publish --registry https://your-registry.com
+```
+
+## Example: Extending the Official System
+
+You can extend the official design system:
+
+```ts
+import officialConfig from '@tokenami/ds';
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  ...officialConfig,
+  
+  // Override or extend theme
+  theme: {
+    ...officialConfig.theme,
+    root: {
+      ...officialConfig.theme.root,
+      color: {
+        ...officialConfig.theme.root.color,
+        // Add your brand colors
+        brand: '#ff6b35',
+        accent: '#004e89',
+      },
+    },
+  },
+});
+```
+
+## Documentation
+
+Create a comprehensive README documenting:
+
+- Installation instructions
+- Available tokens and their values
+- Usage examples
+- Theme switching (if applicable)
+- Property aliases
+- Custom selectors
+- Animation keyframes
+
+See the [@tokenami/ds README](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) for a great example.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Semantic Naming">
+    Name tokens based on their purpose (`primary`, `danger`) rather than their appearance (`blue`, `red`). This makes themes easier to maintain.
+  </Accordion>
+  
+  <Accordion title="Version Carefully">
+    Follow semantic versioning. Breaking changes to token names or values should be major version bumps.
+  </Accordion>
+  
+  <Accordion title="Document Breaking Changes">
+    Maintain a CHANGELOG.md documenting all breaking changes and migration paths.
+  </Accordion>
+  
+  <Accordion title="Test Across Projects">
+    Test your design system in multiple consuming projects before publishing.
+  </Accordion>
+  
+  <Accordion title="Provide Escape Hatches">
+    Allow consumers to override your tokens when needed using the triple-dash syntax.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Global Styles" icon="globe" href="/design-systems/global-styles">
+    Configure global CSS styles
+  </Card>
+  <Card title="Breakpoints" icon="mobile" href="/design-systems/breakpoints">
+    Set up responsive breakpoints
+  </Card>
+  <Card title="Animation" icon="wand-magic-sparkles" href="/design-systems/animation">
+    Add keyframes and animations
+  </Card>
+</CardGroup>

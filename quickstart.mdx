@@ -1,80 +1,536 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Build your first styled components with Tokenami and learn core concepts through practical examples
 ---
 
-## Get started in three steps
+# Quickstart
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+This guide will walk you through creating your first Tokenami components. You'll learn the core concepts and patterns that make Tokenami powerful for building design systems.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  This guide assumes you've already [installed Tokenami](/installation) and have your development environment set up.
 </Note>
+
+## Your First Styled Component
+
+Let's start with a simple button component. With Tokenami, you use the `css()` utility to apply styles:
+
+```tsx Button.tsx
+import { css } from '@tokenami/css';
+
+function Button(props) {
+  return (
+    <button 
+      {...props}
+      style={css({
+        '--padding': 4,
+        '--background-color': 'var(--color_sky-500)',
+        '--color': 'white',
+        '--border-radius': 'var(--radii_rounded)',
+        '--border': 'none',
+        '--cursor': 'pointer',
+      })}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+export default Button;
+```
+
+### Understanding the Syntax
+
+Tokenami uses a simple naming convention:
+
+- **Property names**: Add `--` prefix to any CSS property (`padding` → `--padding`)
+- **Theme tokens**: Reference with `var(--group_token)` syntax
+- **Grid values**: Numbers multiply by your grid value (default `0.25rem`)
+
+<Steps>
+  <Step title="Property: --padding">
+    The `--padding: 4` sets padding to `1rem` (4 × 0.25rem grid)
+  </Step>
+  
+  <Step title="Token: var(--color_sky-500)">
+    References the `sky-500` token from your `color` theme group
+  </Step>
+  
+  <Step title="Direct values">
+    You can use strings like `'white'` or `'none'` directly
+  </Step>
+</Steps>
+
+## Adding Hover States
+
+Add pseudo-selectors by prefixing the property name with the selector and an underscore:
+
+```tsx
+<button style={css({
+  '--padding': 4,
+  '--background-color': 'var(--color_sky-500)',
+  '--hover_background-color': 'var(--color_sky-600)',
+  '--color': 'white',
+  '--hover_color': 'white',
+})} />
+```
+
+Common selectors include:
+- `--hover_` for `:hover`
+- `--focus_` for `:focus`
+- `--active_` for `:active`
+- `--disabled_` for `:disabled`
+
+## Responsive Design
+
+Add breakpoints the same way as pseudo-selectors:
+
+```tsx
+<div style={css({
+  '--padding': 2,              // Base: 0.5rem
+  '--md_padding': 4,            // Medium screens: 1rem
+  '--lg_padding': 6,            // Large screens: 1.5rem
+})} />
+```
+
+You can combine breakpoints with pseudo-selectors:
+
+```tsx
+<button style={css({
+  '--padding': 2,
+  '--md_padding': 4,                    // Medium screens
+  '--hover_padding': 3,                 // Hover state
+  '--md_hover_padding': 5,              // Medium screens + hover
+})} />
+```
+
+<Info>
+  Define breakpoints in your `tokenami.config.ts` under the `responsive` key.
+</Info>
+
+## Composing Styles
+
+For reusable components, extract styles with `css.compose()` to reduce repetition in your markup:
+
+```tsx Button.tsx
+import { css } from '@tokenami/css';
+
+const button = css.compose({
+  '--display': 'inline-flex',
+  '--align-items': 'center',
+  '--justify-content': 'center',
+  '--gap': 2,
+  '--padding-block': 2,
+  '--padding-inline': 4,
+  '--background-color': 'var(--color_sky-500)',
+  '--color': 'white',
+  '--border-radius': 'var(--radii_rounded)',
+  '--border': 'none',
+  '--cursor': 'pointer',
+  '--transition': 'background-color 0.2s',
+  '--hover_background-color': 'var(--color_sky-600)',
+});
+
+function Button(props) {
+  const [cn, css] = button();
+  return (
+    <button 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)}
+    >
+      {props.children}
+    </button>
+  );
+}
+```
+
+Now your component outputs clean HTML:
+
+```html
+<button class="tk-abc123">Click me</button>
+```
+
+<Note>
+  The `css.compose()` API extracts styles into your stylesheet and replaces them with a class name, keeping your markup DRY.
+</Note>
+
+## Adding Variants
+
+Create style variations with the `variants` option:
+
+```tsx Button.tsx
+import { css } from '@tokenami/css';
+
+const button = css.compose({
+  '--display': 'inline-flex',
+  '--align-items': 'center',
+  '--justify-content': 'center',
+  '--padding-block': 2,
+  '--padding-inline': 4,
+  '--border-radius': 'var(--radii_rounded)',
+  '--border': 'none',
+  '--cursor': 'pointer',
+  
+  variants: {
+    variant: {
+      primary: {
+        '--background-color': 'var(--color_sky-500)',
+        '--color': 'white',
+        '--hover_background-color': 'var(--color_sky-600)',
+      },
+      secondary: {
+        '--background-color': 'var(--color_slate-200)',
+        '--color': 'var(--color_slate-900)',
+        '--hover_background-color': 'var(--color_slate-300)',
+      },
+      danger: {
+        '--background-color': 'var(--color_red-500)',
+        '--color': 'white',
+        '--hover_background-color': 'var(--color_red-600)',
+      },
+    },
+    size: {
+      small: {
+        '--padding-block': 1,
+        '--padding-inline': 2,
+        '--font-size': '0.875rem',
+      },
+      medium: {
+        '--padding-block': 2,
+        '--padding-inline': 4,
+        '--font-size': '1rem',
+      },
+      large: {
+        '--padding-block': 3,
+        '--padding-inline': 6,
+        '--font-size': '1.125rem',
+      },
+    },
+  },
+});
+
+function Button(props) {
+  const [cn, css] = button({ 
+    variant: props.variant || 'primary',
+    size: props.size || 'medium'
+  });
+  return (
+    <button 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)}
+    >
+      {props.children}
+    </button>
+  );
+}
+```
+
+Usage:
+
+```tsx
+<Button variant="primary" size="large">
+  Primary Large
+</Button>
+
+<Button variant="danger" size="small">
+  Delete
+</Button>
+```
+
+## Type-Safe Props
+
+Use Tokenami's type utilities to get full TypeScript support:
+
+```tsx Button.tsx
+import { type Variants, type TokenamiStyle, css } from '@tokenami/css';
+import { type ComponentProps } from 'react';
+
+const button = css.compose({
+  // ... your styles
+  variants: {
+    variant: {
+      primary: { /* ... */ },
+      secondary: { /* ... */ },
+    },
+    size: {
+      small: { /* ... */ },
+      large: { /* ... */ },
+    },
+  },
+});
+
+interface ButtonProps 
+  extends TokenamiStyle<ComponentProps<'button'>>,
+          Variants<typeof button> {}
+
+function Button(props: ButtonProps) {
+  const [cn, css] = button(props);
+  return (
+    <button 
+      {...props} 
+      className={cn(props.className)} 
+      style={css(props.style)}
+    />
+  );
+}
+```
+
+Now you get:
+- Autocomplete for `variant` and `size` props
+- Type errors for invalid variant values
+- Full TypeScript support for the `style` prop
+
+## Building a Card Component
+
+Let's build a more complex example—a card component:
+
+```tsx Card.tsx
+import { css } from '@tokenami/css';
+
+const card = css.compose({
+  '--display': 'flex',
+  '--flex-direction': 'column',
+  '--gap': 3,
+  '--padding': 4,
+  '--background-color': 'white',
+  '--border': '1px solid var(--color_slate-200)',
+  '--border-radius': 'var(--radii_rounded)',
+  '--box-shadow': '0 1px 3px rgba(0,0,0,0.1)',
+  
+  variants: {
+    hoverable: {
+      true: {
+        '--transition': 'all 0.2s',
+        '--hover_box-shadow': '0 4px 6px rgba(0,0,0,0.1)',
+        '--hover_transform': 'translateY(-2px)',
+        '--cursor': 'pointer',
+      },
+    },
+  },
+});
+
+const cardTitle = css.compose({
+  '--margin': 0,
+  '--font-size': '1.25rem',
+  '--font-weight': 'bold',
+  '--color': 'var(--color_slate-900)',
+});
+
+const cardContent = css.compose({
+  '--color': 'var(--color_slate-600)',
+  '--line-height': 1.6,
+});
+
+export function Card({ title, children, hoverable, ...props }) {
+  const [cardCn, cardCss] = card({ hoverable });
+  const [titleCn] = cardTitle();
+  const [contentCn] = cardContent();
+  
+  return (
+    <div {...props} className={cardCn(props.className)} style={cardCss(props.style)}>
+      {title && <h3 className={titleCn}>{title}</h3>}
+      <div className={contentCn}>{children}</div>
+    </div>
+  );
+}
+```
+
+Usage:
+
+```tsx
+<Card title="Getting Started" hoverable>
+  <p>Start building with Tokenami today.</p>
+</Card>
+```
+
+## Handling Dynamic Values
+
+Pass dynamic values directly to CSS properties:
+
+```tsx
+function Box({ color, size }) {
+  return (
+    <div style={css({
+      '--background-color': color,
+      '--width': size,
+      '--height': size,
+    })} />
+  );
+}
+
+// Usage
+<Box color="var(--color_blue-500)" size="100px" />
+```
+
+For one-off values not in your theme, use the triple-dash fallback:
+
+```tsx
+<div style={css({
+  '--padding': 'var(---, 20px)',  // Escapes type checking
+  '--background': 'var(---, linear-gradient(to right, red, blue))',
+})} />
+```
+
+<Warning>
+  Tokenami intentionally adds friction for arbitrary values to encourage using your design tokens. Use this sparingly.
+</Warning>
+
+## Style Overrides
+
+The `css()` utility handles overrides gracefully—the last parameter wins:
+
+```tsx
+function Button(props) {
+  const disabled = props.disabled && {
+    '--opacity': 0.5,
+    '--cursor': 'not-allowed',
+    '--pointer-events': 'none',
+  };
+  
+  return (
+    <button style={css(
+      { '--padding': 4 },              // Base styles
+      disabled,                        // Conditional styles
+      props.style                      // Props override everything
+    )} />
+  );
+}
+
+// Override padding from parent
+<Button style={{ '--padding': 6 }}>Custom Padding</Button>
+```
+
+## Complete Example
+
+Here's a full example combining everything we've learned:
+
+```tsx App.tsx
+import { css, type Variants, type TokenamiStyle } from '@tokenami/css';
+import { type ComponentProps } from 'react';
+
+const button = css.compose({
+  '--display': 'inline-flex',
+  '--align-items': 'center',
+  '--justify-content': 'center',
+  '--gap': 2,
+  '--padding-block': 2,
+  '--padding-inline': 4,
+  '--border-radius': 'var(--radii_rounded)',
+  '--border': 'none',
+  '--cursor': 'pointer',
+  '--transition': 'all 0.2s',
+  '--font-weight': '500',
+  
+  variants: {
+    variant: {
+      primary: {
+        '--background-color': 'var(--color_sky-500)',
+        '--color': 'white',
+        '--hover_background-color': 'var(--color_sky-600)',
+      },
+      secondary: {
+        '--background-color': 'transparent',
+        '--color': 'var(--color_sky-500)',
+        '--border': '1px solid var(--color_sky-500)',
+        '--hover_background-color': 'var(--color_sky-50)',
+      },
+    },
+  },
+});
+
+interface ButtonProps 
+  extends TokenamiStyle<ComponentProps<'button'>>,
+          Variants<typeof button> {}
+
+function Button({ variant = 'primary', ...props }: ButtonProps) {
+  const [cn, css] = button({ variant });
+  return <button {...props} className={cn(props.className)} style={css(props.style)} />;
+}
+
+function App() {
+  return (
+    <div style={css({
+      '--padding': 8,
+      '--display': 'flex',
+      '--flex-direction': 'column',
+      '--gap': 4,
+      '--align-items': 'flex-start',
+    })}>
+      <h1 style={css({ '--margin': 0 })}>Tokenami Quickstart</h1>
+      <Button variant="primary" onClick={() => alert('Primary!')}>Primary Button</Button>
+      <Button variant="secondary" onClick={() => alert('Secondary!')}>Secondary Button</Button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## Next Steps
+
+You now know the fundamentals of Tokenami! Here are some next steps:
+
+<CardGroup cols={2}>
+  <Card title="Core Concepts" icon="book">
+    Learn about theming, grid values, and advanced selectors
+  </Card>
+  
+  <Card title="Design Systems" icon="palette">
+    Build portable design systems with Tokenami
+  </Card>
+  
+  <Card title="TypeScript Integration" icon="code">
+    Deep dive into type utilities and CI setup
+  </Card>
+  
+  <Card title="API Reference" icon="brackets">
+    Explore the complete Tokenami API
+  </Card>
+</CardGroup>
+
+## Common Patterns
+
+### Layout Components
+
+```tsx
+const stack = css.compose({
+  '--display': 'flex',
+  '--flex-direction': 'column',
+  '--gap': 4,
+});
+
+const row = css.compose({
+  '--display': 'flex',
+  '--align-items': 'center',
+  '--gap': 2,
+});
+```
+
+### Focus States
+
+```tsx
+const input = css.compose({
+  '--padding': 2,
+  '--border': '1px solid var(--color_slate-300)',
+  '--border-radius': 'var(--radii_rounded)',
+  '--focus_outline': '2px solid var(--color_sky-500)',
+  '--focus_outline-offset': '2px',
+});
+```
+
+### Dark Mode
+
+```tsx
+const card = css.compose({
+  '--background-color': 'white',
+  '--color': 'var(--color_slate-900)',
+  '--dark_background-color': 'var(--color_slate-800)',
+  '--dark_color': 'white',
+});
+```
+
+<Info>
+  Custom selectors like `dark` need to be defined in your `tokenami.config.ts` under the `selectors` key.
+</Info>

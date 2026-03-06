@@ -1,0 +1,182 @@
+---
+title: Theming
+description: Learn how to configure themes, create multiple theme modes, and customize theme selectors in Tokenami
+---
+
+Tokenami relies on your theme to provide design system constraints. Your theme defines the design tokens that are available throughout your application.
+
+## Basic Theme Configuration
+
+Create a theme in `.tokenami/tokenami.config.ts` using the `createConfig` function:
+
+```ts
+import { createConfig } from '@tokenami/css';
+
+export default createConfig({
+  theme: {
+    color: {
+      'slate-100': '#f1f5f9',
+      'slate-700': '#334155',
+      'sky-500': '#0ea5e9',
+    },
+    radii: {
+      rounded: '10px',
+      circle: '9999px',
+      none: 'none',
+    },
+  },
+});
+```
+
+Name your theme groups and tokens however you like. These names become part of your CSS variables and can be referenced in your styles:
+
+```tsx
+import { css } from '@tokenami/css';
+
+<div style={css({
+  '--background-color': 'var(--color_slate-100)',
+  '--border-radius': 'var(--radii_rounded)',
+})} />
+```
+
+## Theme Structure
+
+Your theme can include any number of theme groups. Common theme groups include:
+
+- `color` - Color values
+- `radii` - Border radius values
+- `font` - Font family values
+- `font-size` - Font size values
+- `weight` - Font weight values
+- `shadow` - Box shadow values
+- `anim` - Animation values
+- `ease` - Easing function values
+- `z` - Z-index values
+
+<Tip>
+Want to skip theme setup? Use the [official design system](https://github.com/tokenami/tokenami/blob/main/packages/ds/README.md) which comes with dark mode, fluid typography, RTL support, and more.
+</Tip>
+
+## Multiple Themes
+
+Use the `modes` key to define multiple themes. This is useful for implementing features like dark mode or alternate color schemes.
+
+### Defining Theme Modes
+
+Tokens that are shared across themes should be placed in a `root` object. Tokens that differ between themes go in their respective mode objects:
+
+```ts
+export default createConfig({
+  theme: {
+    modes: {
+      light: {
+        color: {
+          primary: '#f1f5f9',
+          secondary: '#334155',
+        },
+      },
+      dark: {
+        color: {
+          primary: '#0ea5e9',
+          secondary: '#f1f5f9',
+        },
+      },
+    },
+    root: {
+      radii: {
+        rounded: '10px',
+        circle: '9999px',
+        none: 'none',
+      },
+    },
+  },
+});
+```
+
+### Using Theme Modes
+
+This configuration creates `.theme-light` and `.theme-dark` classes. Add them to your page to switch themes:
+
+```tsx
+// Light theme
+<body className="theme-light">
+  <App />
+</body>
+
+// Dark theme
+<body className="theme-dark">
+  <App />
+</body>
+```
+
+Tokens from the `root` object are available in all themes, while mode-specific tokens change based on the active theme class.
+
+## Custom Theme Selectors
+
+Customize how theme modes are applied using the `themeSelector` config option:
+
+```ts
+export default createConfig({
+  themeSelector: (mode) => (mode === 'root' ? ':root' : `[data-theme=${mode}]`),
+  theme: {
+    modes: {
+      light: { /* ... */ },
+      dark: { /* ... */ },
+    },
+  },
+});
+```
+
+With this configuration, you can switch themes using data attributes instead of classes:
+
+```tsx
+<body data-theme="light">
+  <App />
+</body>
+```
+
+### Theme Selector Examples
+
+<CodeGroup>
+```ts Class-based (default)
+export default createConfig({
+  themeSelector: (mode) => (mode === 'root' ? ':root' : `.theme-${mode}`),
+});
+```
+
+```ts Data attribute
+export default createConfig({
+  themeSelector: (mode) => (mode === 'root' ? ':root' : `[data-theme=${mode}]`),
+});
+```
+
+```ts HTML attribute
+export default createConfig({
+  themeSelector: (mode) => (mode === 'root' ? ':root' : `html[data-mode="${mode}"]`),
+});
+```
+</CodeGroup>
+
+## Accessing Theme Tokens
+
+Once defined, theme tokens are accessed using CSS variable syntax with the pattern `var(--{group}_{token})`:
+
+```tsx
+import { css } from '@tokenami/css';
+
+function Card() {
+  return (
+    <div style={css({
+      '--background-color': 'var(--color_primary)',
+      '--color': 'var(--color_secondary)',
+      '--border-radius': 'var(--radii_rounded)',
+    })}>
+      Card content
+    </div>
+  );
+}
+```
+
+<Note>
+Tokenami's TypeScript plugin provides autocomplete for all your theme tokens, making it easy to discover and use the correct values.
+</Note>

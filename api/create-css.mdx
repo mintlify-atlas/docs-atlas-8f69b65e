@@ -1,0 +1,196 @@
+---
+title: createCss
+description: Create a custom css function with specific configuration
+---
+
+The `createCss` function creates a custom `css` utility configured with your aliases and options. Use this when you need custom configuration or multiple isolated css instances.
+
+## Import
+
+```typescript
+import { createCss } from '@tokenami/css';
+```
+
+## Signature
+
+```typescript
+function createCss(
+  config: Pick<Config, 'aliases'>,
+  options?: CreateCssOptions
+): typeof css
+```
+
+<ParamField path="config" type="Pick<Config, 'aliases'>" required>
+  Configuration object containing alias mappings.
+
+  <Expandable title="properties">
+    <ResponseField name="aliases" type="Aliases">
+      Maps alias names to arrays of CSS properties. For example, `px` might map to `['padding-left', 'padding-right']`.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="options" type="CreateCssOptions">
+  Optional configuration for css behavior.
+
+  <Expandable title="properties">
+    <ResponseField name="escapeSpecialChars" type="boolean" default="true">
+      Whether to escape special characters in property names. Set to `false` if your framework handles escaping automatically (prevents double-escaping).
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="css" type="function">
+  A configured css function with the same API as the default `css` export, including the `compose` method.
+</ResponseField>
+
+## Usage
+
+### Basic Custom Instance
+
+Create a css function with custom aliases:
+
+```typescript
+import { createCss } from '@tokenami/css';
+
+const css = createCss({
+  aliases: {
+    px: ['padding-left', 'padding-right'],
+    py: ['padding-top', 'padding-bottom'],
+    size: ['width', 'height']
+  }
+});
+
+// Now use shorthand properties
+const styles = css({
+  '--px': 'var(--space_4)',     // Applies to padding-left and padding-right
+  '--py': 'var(--space_2)',     // Applies to padding-top and padding-bottom
+  '--size': 'var(--size_full)'  // Applies to width and height
+});
+```
+
+### With Config File
+
+Use with your Tokenami config:
+
+```typescript
+import { createCss } from '@tokenami/css';
+import config from './tokenami.config';
+
+const css = createCss(config);
+
+export { css };
+```
+
+### Disable Character Escaping
+
+Some frameworks (like SolidJS) handle escaping automatically:
+
+```typescript
+import { createCss } from '@tokenami/css';
+import config from './tokenami.config';
+
+const css = createCss(config, {
+  escapeSpecialChars: false
+});
+
+export { css };
+```
+
+### Multiple Isolated Instances
+
+Create separate css instances for different design systems:
+
+```typescript
+import { createCss } from '@tokenami/css';
+import mainConfig from './tokenami.config';
+import adminConfig from './admin-tokenami.config';
+
+export const css = createCss(mainConfig);
+export const adminCss = createCss(adminConfig);
+
+// Use them separately
+const mainStyles = css({
+  '--color': 'var(--color_primary)'
+});
+
+const adminStyles = adminCss({
+  '--color': 'var(--admin-color_primary)'
+});
+```
+
+## How Aliases Work
+
+Aliases allow you to apply the same value to multiple CSS properties:
+
+```typescript
+const css = createCss({
+  aliases: {
+    // Single property alias
+    p: ['padding'],
+    
+    // Multi-property alias
+    px: ['padding-left', 'padding-right'],
+    py: ['padding-top', 'padding-bottom'],
+    
+    // Complex aliases
+    border-x: ['border-left', 'border-right'],
+    border-y: ['border-top', 'border-bottom']
+  }
+});
+
+// Using aliases
+const styles = css({
+  '--px': 'var(--space_4)',  // Sets both padding-left and padding-right
+  '--border-x': '1px solid'  // Sets both border-left and border-right
+});
+```
+
+## Default Export
+
+The default `css` export from `@tokenami/css` is created with an empty config:
+
+```typescript
+// Internal implementation
+export const css = createCss({});
+```
+
+This means the default `css` doesn't support aliases unless you configure them via `createCss`.
+
+## Special Character Escaping
+
+By default, Tokenami escapes special characters in CSS custom properties:
+
+```typescript
+// With escaping (default)
+const css = createCss(config, { escapeSpecialChars: true });
+
+// Arbitrary values with special chars are escaped
+const styles = css({
+  '--padding': 'var(---, calc(1rem + 2px))'
+});
+// Result: --padding: var(---\, calc\(1rem \+ 2px\))
+
+// Without escaping
+const css = createCss(config, { escapeSpecialChars: false });
+
+// Characters are not escaped (framework handles it)
+const styles = css({
+  '--padding': 'var(---, calc(1rem + 2px))'
+});
+// Result: --padding: var(---, calc(1rem + 2px))
+```
+
+## Performance
+
+Each `createCss` call creates a new instance with:
+
+- **Isolated cache**: Separate LRU cache for style memoization
+- **Custom configuration**: Unique alias and option handling
+- **Same performance**: Full performance optimizations as default export
+
+## Related
+
+- [css](/api/css) - Apply and merge Tokenami styles
+- [createConfig](/api/create-config) - Create type-safe Tokenami configuration
+- [Config Options](/api/config-options) - Full configuration reference
